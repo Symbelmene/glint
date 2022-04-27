@@ -10,7 +10,7 @@ class Config:
         self.DATA_DIR_RAW = self.DATA_DIR + '/RAW'
 
         self.DATA_DIR_RAW_24H = self.DATA_DIR_RAW + '/24H'
-        self.DATA_DIR_RAW_15M = self.DATA_DIR_RAW + '/15M'
+        self.DATA_DIR_RAW_5M  = self.DATA_DIR_RAW + '/5M'
 
 
 def parseEnvFile(envPath):
