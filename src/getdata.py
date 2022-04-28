@@ -52,6 +52,10 @@ def getFinanceData():
 
 def checkIfDatabaseUpdateRequired():
     metaPath = f'{cfg.DATA_DIR}/db_details.json'
+
+    if not os.path.exists(cfg.DATA_DIR):
+        os.makedirs(cfg.DATA_DIR)
+
     if not os.path.exists(metaPath):
         with open(metaPath, 'w+') as wf:
             json.dump({}, wf)

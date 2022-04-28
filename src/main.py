@@ -1,7 +1,7 @@
-
+from getdata import updateFinanceDatabase
 
 def main():
-    pass
+    updateFinanceDatabase()
 
 if __name__ == '__main__':
     main()
