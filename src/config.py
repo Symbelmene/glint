@@ -19,5 +19,5 @@ def parseEnvFile(envPath):
 
     with open(envPath, 'r') as rf:
         envList = [val.split('=') for val in rf.read().split('\n')]
-
+    envList = [e for e in envList if len(e) > 1]
     return {e[0] : e[1] for e in envList}

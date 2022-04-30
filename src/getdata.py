@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import traceback
 import pandas as pd
 import yfinance as yf
 from tqdm import tqdm
@@ -68,18 +69,18 @@ def saveToCsvFromYahoo5M(ticker):
                 return False
 
         df.to_csv(tickerPath)
-
     except Exception as ex:
+        log(traceback.format_exc())
         return False
     return True
 
 
 def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))
-    with ThreadPool(16) as p:
-        r = list(tqdm(p.imap(saveToCsvFromYahoo24H, tickers), total=len(tickers)))
+    #with ThreadPool(16) as p:
+    #    r = list(tqdm(p.imap(saveToCsvFromYahoo24H, tickers), total=len(tickers)))
 
-    with ThreadPool(16) as p:
+    with ThreadPool(4) as p:
         r = list(tqdm(p.imap(saveToCsvFromYahoo5M, tickers), total=len(tickers)))
 
 
@@ -114,7 +115,7 @@ def checkIfDatabaseUpdateRequired():
 def updateFinanceDatabase():
     log('Start of finance watcher')
     while True:
-        if checkIfDatabaseUpdateRequired():
+        if 1: #checkIfDatabaseUpdateRequired():
             log('Updating finance database...')
             getFinanceData()
             log('Adding basic indicators to data...')

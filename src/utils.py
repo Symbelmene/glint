@@ -10,7 +10,7 @@ def loadStockData(ticker, interval):
         if interval == '24H':
             df = pd.read_csv(f'{cfg.DATA_DIR_RAW_24H}/{ticker}.csv', parse_dates=['Date']).set_index('Date')
         elif interval == '5M':
-            df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Date']).set_index('Date')
+            df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
         else:
             log(f'Unrecognised interval {interval}. (5M or 24H)')
             raise KeyError
