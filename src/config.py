@@ -2,10 +2,12 @@ import os
 
 class Config:
     def __init__(self):
+        self.docker = True if 'DOCKERCONTAINER' in os.environ else False
+
         self.env = parseEnvFile('../.env')
 
-        self.DATA_DIR = self.env['DB_DIR']
-        self.LOG_DIR  = self.env['LOG_DIR']
+        self.DATA_DIR = '/data' if self.docker else self.env['DB_DIR']
+        self.LOG_DIR  = '/logs' if self.docker else self.env['LOG_DIR']
 
         self.DATA_DIR_RAW = self.DATA_DIR + '/RAW'
 

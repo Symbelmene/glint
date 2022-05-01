@@ -1,0 +1,12 @@
+services:
+    glint:
+        image: glint
+        container_name: glint-get
+        volumes:
+            - "${DB_DIR}:/data"
+            - "${LOG_DIR}:/logs"
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        environment:
+            - DOCKERCONTAINER=TRUE

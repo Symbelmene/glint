@@ -77,10 +77,15 @@ def saveToCsvFromYahoo5M(ticker):
 
 def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))
-    #with ThreadPool(16) as p:
-    #    r = list(tqdm(p.imap(saveToCsvFromYahoo24H, tickers), total=len(tickers)))
 
-    with ThreadPool(4) as p:
+    if not os.path.exists(cfg.DATA_DIR_RAW_5M):
+        os.makedirs(cfg.DATA_DIR_RAW_5M)
+    with ThreadPool(8) as p:
+        r = list(tqdm(p.imap(saveToCsvFromYahoo24H, tickers), total=len(tickers)))
+
+    if not os.path.exists(cfg.DATA_DIR_RAW_24H):
+        os.makedirs(cfg.DATA_DIR_RAW_24H)
+    with ThreadPool(8) as p:
         r = list(tqdm(p.imap(saveToCsvFromYahoo5M, tickers), total=len(tickers)))
 
 
@@ -115,7 +120,7 @@ def checkIfDatabaseUpdateRequired():
 def updateFinanceDatabase():
     log('Start of finance watcher')
     while True:
-        if 1: #checkIfDatabaseUpdateRequired():
+        if checkIfDatabaseUpdateRequired():
             log('Updating finance database...')
             getFinanceData()
             log('Adding basic indicators to data...')
