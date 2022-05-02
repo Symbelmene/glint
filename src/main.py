@@ -1,7 +1,10 @@
 import time
 from multiprocessing import Pool
-from dbg import log
-from getdata import updateFinanceDatabase
+from src.dbg import log
+from src.getdata import updateFinanceDatabase
+
+from src.config import Config
+cfg = Config()
 
 
 def main():
@@ -17,3 +20,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
