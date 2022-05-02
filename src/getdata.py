@@ -9,7 +9,7 @@ from multiprocessing.pool import ThreadPool
 import warnings
 warnings.simplefilter("ignore")
 
-from utils import loadStockData
+from utils import loadRawStockData
 from dbg import log
 from config import Config
 cfg = Config()
@@ -34,7 +34,7 @@ def saveToCsvFromYahoo24H(ticker):
     tickerPath = f'{cfg.DATA_DIR_RAW_24H}/{tickerFormat}.csv'
     try:
         if os.path.exists(tickerPath):
-            dfOld = loadStockData(tickerFormat, '24H')
+            dfOld = loadRawStockData(tickerFormat, '24H')
             df = stock.history(period="5y", start=dfOld.index[-1])
             df = pd.concat([dfOld[df.columns], df]).drop_duplicates()
         else:
@@ -43,7 +43,6 @@ def saveToCsvFromYahoo24H(ticker):
                 return False
 
         df.to_csv(tickerPath)
-
 
     except Exception as ex:
         return False
@@ -60,7 +59,7 @@ def saveToCsvFromYahoo5M(ticker):
     tickerPath = f'{cfg.DATA_DIR_RAW_5M}/{tickerFormat}.csv'
     try:
         if os.path.exists(tickerPath):
-            dfOld = loadStockData(tickerFormat, '5M')
+            dfOld = loadRawStockData(tickerFormat, '5M')
             df = stock.history(interval="5m", start=dfOld.index[-1])
             df = pd.concat([dfOld[df.columns], df]).drop_duplicates()
         else:
@@ -81,12 +80,12 @@ def getFinanceData():
     if not os.path.exists(cfg.DATA_DIR_RAW_5M):
         os.makedirs(cfg.DATA_DIR_RAW_5M)
     with ThreadPool(8) as p:
-        r = list(tqdm(p.imap(saveToCsvFromYahoo24H, tickers), total=len(tickers)))
+        r = list(p.imap(saveToCsvFromYahoo24H, tickers))
 
     if not os.path.exists(cfg.DATA_DIR_RAW_24H):
         os.makedirs(cfg.DATA_DIR_RAW_24H)
     with ThreadPool(8) as p:
-        r = list(tqdm(p.imap(saveToCsvFromYahoo5M, tickers), total=len(tickers)))
+        r = list(p.imap(saveToCsvFromYahoo5M, tickers))
 
 
 def checkIfDatabaseUpdateRequired():
@@ -117,13 +116,82 @@ def checkIfDatabaseUpdateRequired():
     return update
 
 
+def addDailyReturnToDF(df):
+    df['interval_return'] = (df['Close'] / df['Close'].shift(1)) - 1
+    return df
+
+
+def addCumulativeReturnToDF(df):
+    df['cum_return'] = (1 + df['interval_return']).cumprod()
+    return df
+
+
+def addBollingerBands(df, window=20):
+    df['middle_band'] = df['Close'].rolling(window=window).mean()
+    df['upper_band']  = df['middle_band'] + 1.96 * df['Close'].rolling(window=window).std()
+    df['lower_band']  = df['middle_band'] - 1.96 * df['Close'].rolling(window=window).std()
+    return df
+
+
+def addIchimoku(df):
+    # Conversion Line - (Highest value in period / lowest value in period) / 2 (Period = 9)
+    highValue = df['High'].rolling(window=9).max()
+    lowValue  = df['Low'].rolling(window=9).min()
+    df['Conversion'] = (highValue + lowValue) / 2
+
+    # Base Line - (Highest value in period / lowest value in period) / 2 (Period = 26)
+    highValue2 = df['High'].rolling(window=26).max()
+    lowValue2  = df['Low'].rolling(window=26).min()
+    df['Baseline'] = (highValue2 + lowValue2) / 2
+
+    # Span A - (Conversion + Base) / 2 - (Period = 26)
+    df['SpanA'] = ((df['Conversion'] + df['Baseline']) / 2)
+
+    # Span B - (Conversion + Base) / 2 - (Period = 52)
+    highValue3 = df['High'].rolling(window=52).max()
+    lowValue3  = df['Low'].rolling(window=52).min()
+    df['SpanB'] = ((highValue3 + lowValue3) / 2).shift(26)
+
+    # Lagging Span
+    df['Lagging'] = df['Close'].shift(-26)
+    return df
+
+
+def addBaseIndicatorsToDf(ticker, interval):
+    df = loadRawStockData(ticker, interval)
+    if df is None:
+        return False
+    df = addDailyReturnToDF(df)
+    df = addCumulativeReturnToDF(df)
+    df = addBollingerBands(df)
+    df = addIchimoku(df)
+    if interval == '5M':
+        df.to_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv')
+    if interval == '24H':
+        df.to_csv(f'{cfg.DATA_DIR_RAW_24H}/{ticker}.csv')
+    return True
+
+
+def addBasicIndicatorsToAllCSVs():
+    tickers = [ticker.split('.')[0] for ticker in os.listdir(cfg.DATA_DIR_RAW_24H)]
+    for ticker in tqdm(tickers):
+        addBaseIndicatorsToDf(ticker, '24H')
+
+    tickers = [ticker.split('.')[0] for ticker in os.listdir(cfg.DATA_DIR_RAW_5M)]
+    for ticker in tqdm(tickers):
+        addBaseIndicatorsToDf(ticker, '5M')
+
+
 def updateFinanceDatabase():
     log('Start of finance watcher')
     while True:
         if checkIfDatabaseUpdateRequired():
             log('Updating finance database...')
             getFinanceData()
+
             log('Adding basic indicators to data...')
+            addBasicIndicatorsToAllCSVs()
 
             log('Database update completed.')
+
         time.sleep(60)

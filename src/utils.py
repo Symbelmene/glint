@@ -4,7 +4,7 @@ from dbg import log
 from config import Config
 cfg = Config()
 
-def loadStockData(ticker, interval):
+def loadRawStockData(ticker, interval):
     # Try to get the file and if it doesn't exist issue a warning
     try:
         if interval == '24H':

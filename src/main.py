@@ -1,9 +1,9 @@
 import time
 from multiprocessing import Pool
-from src.dbg import log
-from src.getdata import updateFinanceDatabase
+from dbg import log
+from getdata import updateFinanceDatabase
 
-from src.config import Config
+from config import Config
 cfg = Config()
 
 
