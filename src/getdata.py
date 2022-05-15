@@ -27,7 +27,6 @@ def getColumnFromCsv(file, col_name):
 def saveToCsvFromYahoo24H(ticker):
     stock = yf.Ticker(ticker)
     tickerFormat = ticker.replace(".", "_")
-
     tickerPath = f'{cfg.DATA_DIR_RAW_24H}/{tickerFormat}.csv'
     try:
         if os.path.exists(tickerPath):
@@ -72,14 +71,14 @@ def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))
 
     log(f'Updating 24H data to {cfg.DATA_DIR_RAW_24H}')
-    if not os.path.exists(cfg.DATA_DIR_RAW_5M):
-        os.makedirs(cfg.DATA_DIR_RAW_5M)
+    if not os.path.exists(cfg.DATA_DIR_RAW_24H):
+        os.makedirs(cfg.DATA_DIR_RAW_24H)
     with ThreadPool(8) as p:
         r = list(p.imap(saveToCsvFromYahoo24H, tickers))
 
     log(f'Updating 5M data to {cfg.DATA_DIR_RAW_5M}')
-    if not os.path.exists(cfg.DATA_DIR_RAW_24H):
-        os.makedirs(cfg.DATA_DIR_RAW_24H)
+    if not os.path.exists(cfg.DATA_DIR_RAW_5M):
+        os.makedirs(cfg.DATA_DIR_RAW_5M)
     with ThreadPool(8) as p:
         r = list(p.imap(saveToCsvFromYahoo5M, tickers))
 
