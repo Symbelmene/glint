@@ -1,8 +1,10 @@
+import os
 import pandas as pd
 
 from dbg import log
 from config import Config
 cfg = Config()
+
 
 def loadRawStockData(ticker, interval):
     # Try to get the file and if it doesn't exist issue a warning
@@ -18,3 +20,20 @@ def loadRawStockData(ticker, interval):
         print(ex)
     else:
         return df
+
+
+def getValidTickers(interval='24H'):
+    if interval == '24H':
+        inDir = cfg.DATA_DIR_RAW_24H
+    elif interval == '5M':
+        inDir = cfg.DATA_DIR_RAW_5M
+    else:
+        log('Interval not recognised in getValidTickers')
+        raise KeyError
+
+    return [ticker.split('.')[0] for ticker in os.listdir(inDir)]
+
+
+def loadAllRawStockData(interval):
+    tickers = getValidTickers(interval)
+    return {ticker : loadRawStockData(ticker, interval) for ticker in tickers}
