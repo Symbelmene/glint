@@ -19,11 +19,6 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
-    dfDict = utils.loadAllRawStockData('24H')
-
-
-    #df = df[['Open', 'High', 'Low', 'Close', 'Volume', 'interval_return', 'cum_return']].iloc[1:,:]
-    x = 1
-
+    main()
+    #dfDict = utils.loadAllRawStockData('24H')
 

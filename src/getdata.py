@@ -195,3 +195,11 @@ def updateFinanceDatabase():
             log('Database update completed.')
 
         time.sleep(60)
+
+
+def main():
+    updateFinanceDatabase()
+
+
+if __name__ == '__main__':
+    main()

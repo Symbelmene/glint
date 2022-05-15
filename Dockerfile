@@ -11,4 +11,4 @@ RUN pip3 install -r requirements.txt
 COPY . .
 
 WORKDIR /app/src
-CMD ["python", "main.py"]
+CMD ["python", "getdata.py"]
