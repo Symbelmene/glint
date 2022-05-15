@@ -28,9 +28,6 @@ def saveToCsvFromYahoo24H(ticker):
     stock = yf.Ticker(ticker)
     tickerFormat = ticker.replace(".", "_")
 
-    if not os.path.exists(cfg.DATA_DIR_RAW_24H):
-        os.makedirs(cfg.DATA_DIR_RAW_24H)
-
     tickerPath = f'{cfg.DATA_DIR_RAW_24H}/{tickerFormat}.csv'
     try:
         if os.path.exists(tickerPath):
@@ -52,9 +49,6 @@ def saveToCsvFromYahoo24H(ticker):
 def saveToCsvFromYahoo5M(ticker):
     stock = yf.Ticker(ticker)
     tickerFormat = ticker.replace(".", "_")
-
-    if not os.path.exists(cfg.DATA_DIR_RAW_5M):
-        os.makedirs(cfg.DATA_DIR_RAW_5M)
 
     tickerPath = f'{cfg.DATA_DIR_RAW_5M}/{tickerFormat}.csv'
     try:
