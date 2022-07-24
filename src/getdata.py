@@ -53,7 +53,7 @@ def saveToCsvFromYahoo5M(ticker):
     try:
         if os.path.exists(tickerPath):
             dfOld = loadRawStockData(tickerFormat, '5M')
-            df = stock.history(interval="5m", start=dfOld.index[-1])
+            df = stock.history(interval="5m") #, start=dfOld.index[-1])
             df = pd.concat([dfOld[df.columns], df]).drop_duplicates()
         else:
             df = stock.history(interval="5m")
@@ -69,18 +69,29 @@ def saveToCsvFromYahoo5M(ticker):
 
 def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))
+    numThreads = cfg.THREADS
 
     log(f'Updating 24H data to {cfg.DATA_DIR_RAW_24H}')
     if not os.path.exists(cfg.DATA_DIR_RAW_24H):
         os.makedirs(cfg.DATA_DIR_RAW_24H)
-    with ThreadPool(8) as p:
-        r = list(p.imap(saveToCsvFromYahoo24H, tickers))
+
+    if numThreads == 1:
+        for ticker in tickers:
+            saveToCsvFromYahoo24H(ticker)
+    else:
+        with ThreadPool(numThreads) as p:
+            r = list(p.imap(saveToCsvFromYahoo24H, tickers))
 
     log(f'Updating 5M data to {cfg.DATA_DIR_RAW_5M}')
     if not os.path.exists(cfg.DATA_DIR_RAW_5M):
         os.makedirs(cfg.DATA_DIR_RAW_5M)
-    with ThreadPool(8) as p:
-        r = list(p.imap(saveToCsvFromYahoo5M, tickers))
+
+    if numThreads == 1:
+        for ticker in tickers:
+            saveToCsvFromYahoo5M(ticker)
+    else:
+        with ThreadPool(numThreads) as p:
+            r = list(p.imap(saveToCsvFromYahoo5M, tickers))
 
 
 def checkIfDatabaseUpdateRequired():

@@ -6,6 +6,8 @@ class Config:
 
         self.env = parseEnvFile('../.env')
 
+        self.THREADS  = 8
+
         self.DATA_DIR = '/data' if self.docker else self.env['DB_DIR']
         self.LOG_DIR  = '/logs' if self.docker else self.env['LOG_DIR']
 
