@@ -1,0 +1,303 @@
+2022-04-30 22:37:05.945655: Glint is initialising...
+2022-04-30 22:37:06.737454: Start of finance watcher
+2022-04-30 22:37:06.739353: Updating finance database...
+2022-04-30 22:43:00.734533: Glint is initialising...
+2022-04-30 22:43:01.542240: Start of finance watcher
+2022-04-30 22:43:01.542240: Updating finance database...
+2022-04-30 22:43:01.589822: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.605684: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.637583: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.637583: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.685313: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.685313: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.717194: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.717194: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.733289: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.764942: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.780566: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.796191: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.827485: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.843065: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.858693: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.874317: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.889973: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.921191: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.936817: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.952442: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.952442: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.968067: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:01.999314: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:02.030565: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:02.046192: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:02.061815: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
+2022-04-30 22:43:02.077439: Traceback (most recent call last):
+  File "C:\Users\chris\Documents\Github\glint\src\getdata.py", line 63, in saveToCsvFromYahoo5M
+    dfOld = loadStockData(tickerFormat, '5M')
+  File "C:\Users\chris\Documents\Github\glint\src\utils.py", line 13, in loadStockData
+    df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Date')
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\util\_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "C:\ProgramData\Anaconda3\envs\nyx\lib\site-packages\pandas\core\frame.py", line 5446, in set_index
+    raise KeyError(f"None of {missing} are in the columns")
+KeyError: "None of ['Date'] are in the columns"
+
