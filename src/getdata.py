@@ -62,6 +62,7 @@ def saveToCsvFromYahoo5M(ticker):
 
         df.to_csv(tickerPath)
     except Exception as ex:
+        log(f'ERROR while getting stock {tickerFormat}:')
         log(traceback.format_exc())
         return False
     return True
@@ -195,8 +196,8 @@ def updateFinanceDatabase():
             log('Updating finance database...')
             getFinanceData()
 
-            log('Adding basic indicators to data...')
-            addBasicIndicatorsToAllCSVs()
+            #log('Adding basic indicators to data...')
+            #addBasicIndicatorsToAllCSVs()
 
             log('Database update completed.')
 
