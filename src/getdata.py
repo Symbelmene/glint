@@ -173,9 +173,9 @@ def addBaseIndicatorsToDf(ticker, interval):
     df = addBollingerBands(df)
     df = addIchimoku(df)
     if interval == '5M':
-        df.to_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv')
+        df.to_csv(f'{cfg.DATA_DIR_CLEAN_5M}/{ticker}.csv')
     if interval == '24H':
-        df.to_csv(f'{cfg.DATA_DIR_RAW_24H}/{ticker}.csv')
+        df.to_csv(f'{cfg.DATA_DIR_CLEAN_24H}/{ticker}.csv')
     return True
 
 
@@ -195,6 +195,10 @@ def updateFinanceDatabase():
         if checkIfDatabaseUpdateRequired():
             log('Updating finance database...')
             getFinanceData()
+
+            log('Adding basic indicators...')
+            addBasicIndicatorsToAllCSVs()
+
             log('Database update completed.')
 
         time.sleep(60)
