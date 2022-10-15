@@ -36,11 +36,14 @@ def saveToCsvFromYahoo24H(ticker):
         else:
             df = stock.history(period="5y")
             if len(df) < 100:
+                log(f'{ticker.zfill(4)} does not have enough data to be useful!')
                 return False
 
         df.to_csv(tickerPath)
+        log(f'{ticker.zfill(4)} was successfully fetched')
 
     except Exception as ex:
+        log(f'{ticker.zfill(4)} was unable to be fetched ({ex})')
         return False
     return True
 
