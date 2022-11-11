@@ -58,7 +58,7 @@ def plotStockTickersInPeriod(colName, tickers, interval, sTime, eTime):
 
     fig = px.line(df, x=df.index, y=df.columns)
     fig.update_xaxes(title="Date", rangeslider_visible=True)
-    fig.update_yaxes(title="Price")
+    fig.update_yaxes(title=colName)
     fig.update_layout(height=800, width=1600,
                       showlegend=True)
     fig.show()
@@ -103,8 +103,8 @@ def main():
 
     plotStockTickersInPeriod('cum_return', list(dfAnalysis.index)[:10], Interval.DAY, sTime, eTime)
 
-    #optimalDict = analysePortfolioBetweenDates(testPortfolio, Interval.DAY, sTime, eTime, numRolls=5000)
-    #formatPrintOptimalDict(optimalDict)
+    optimalDict = analysePortfolioBetweenDates(portfolio, Interval.DAY, sTime, eTime, numRolls=5000)
+    formatPrintOptimalDict(optimalDict)
 
 
 if __name__ == '__main__':
