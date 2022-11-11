@@ -1,4 +1,10 @@
 import os
+from enum import Enum
+
+class Interval(Enum):
+    DAY         = "1d"
+    FIVE_MINUTE = "5m"
+
 
 class Config:
     def __init__(self):
@@ -8,18 +14,15 @@ class Config:
 
         self.THREADS  = 8
 
-        self.DATA_DIR = '/data' if self.docker else self.env['DB_DIR']
-        self.LOG_DIR  = '/logs' if self.docker else self.env['LOG_DIR']
+        self.BASE_DIR = self.env['DB_DIR']
 
-        self.DATA_DIR_RAW   = self.DATA_DIR + '/RAW'
-        self.DATA_DIR_CLEAN = self.DATA_DIR + '/CLEAN'
+        self.DATA_DIR          = '/data' if self.docker else self.BASE_DIR + '/data'
+        self.DATA_DIR_24_HOUR  = self.DATA_DIR + '/24_HOUR'
+        self.DATA_DIR_5_MINUTE = self.DATA_DIR + '/5_MINUTE'
 
-        self.DATA_DIR_RAW_24H   = self.DATA_DIR_RAW + '/24H'
-        self.DATA_DIR_CLEAN_24H = self.DATA_DIR_CLEAN + '/24H'
+        self.LOG_DIR  = '/logs' if self.docker else self.BASE_DIR + '/logs'
 
-        self.DATA_DIR_RAW_5M    = self.DATA_DIR_RAW + '/5M'
-        self.DATA_DIR_CLEAN_5M  = self.DATA_DIR_CLEAN + '/5M'
-
+        self.RISK_FREE_RATE = 0.0125
 
 def parseEnvFile(envPath):
     if not os.path.exists(envPath):

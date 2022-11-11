@@ -2,31 +2,51 @@ import os
 import pandas as pd
 
 from dbg import log
-from config import Config
+from config import Config, Interval
+from preprocess import addBaseIndicatorsToDf
 cfg = Config()
 
 
-def loadRawStockData(ticker, interval):
+
+def loadRawStockData(ticker, interval, add_indicators=True):
     # Try to get the file and if it doesn't exist issue a warning
     try:
-        if interval == '24H':
-            df = pd.read_csv(f'{cfg.DATA_DIR_RAW_24H}/{ticker}.csv', parse_dates=['Date']).set_index('Date')
-        elif interval == '5M':
-            df = pd.read_csv(f'{cfg.DATA_DIR_RAW_5M}/{ticker}.csv', parse_dates=['Datetime']).set_index('Datetime')
+        if interval == Interval.DAY:
+            df = pd.read_csv(f'{cfg.DATA_DIR_24_HOUR}/{ticker}.csv', index_col=0, parse_dates=['Date'])
+        elif interval == Interval.FIVE_MINUTE:
+            df = pd.read_csv(f'{cfg.DATA_DIR_5_MINUTE}/{ticker}.csv', index_col=0, parse_dates=['Datetime'])
         else:
-            log(f'Unrecognised interval {interval}. (5M or 24H)')
+            log(f'Unrecognised interval {interval}.')
             raise KeyError
     except FileNotFoundError as ex:
         print(ex)
-    else:
-        return df
+        return None
+
+    if add_indicators:
+        return addBaseIndicatorsToDf(df)
+    return df
 
 
-def getValidTickers(interval='24H'):
-    if interval == '24H':
-        inDir = cfg.DATA_DIR_RAW_24H
-    elif interval == '5M':
-        inDir = cfg.DATA_DIR_RAW_5M
+def loadMultipleDFsAndMergeByColumnName(colName, sDate, eDate, interval, tickers):
+    mult_df = pd.DataFrame()
+
+    for x in tickers:
+        df = loadRawStockData(x, interval)
+
+        if not df.index.is_unique:
+            df = df.loc[~df.index.duplicated(), :]
+
+        mask = (df.index >= sDate) & (df.index <= eDate)
+        mult_df[x] = df.loc[mask][colName]
+
+    return mult_df
+
+
+def getValidTickers(interval):
+    if interval == Interval.DAY:
+        inDir = cfg.DATA_DIR_24_HOUR
+    elif interval == Interval.FIVE_MINUTE:
+        inDir = cfg.DATA_DIR_5_MINUTE
     else:
         log('Interval not recognised in getValidTickers')
         raise KeyError
