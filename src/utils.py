@@ -8,7 +8,7 @@ cfg = Config()
 
 
 
-def loadRawStockData(ticker, interval, add_indicators=True):
+def loadRawStockData(ticker, interval):
     # Try to get the file and if it doesn't exist issue a warning
     try:
         if interval == Interval.DAY:
@@ -22,8 +22,6 @@ def loadRawStockData(ticker, interval, add_indicators=True):
         print(ex)
         return None
 
-    if add_indicators:
-        return addBaseIndicatorsToDf(df)
     return df
 
 
@@ -36,8 +34,14 @@ def loadMultipleDFsAndMergeByColumnName(colName, sDate, eDate, interval, tickers
         if not df.index.is_unique:
             df = df.loc[~df.index.duplicated(), :]
 
-        mask = (df.index >= sDate) & (df.index <= eDate)
-        mult_df[x] = df.loc[mask][colName]
+        if df.index[-1] < eDate or df.index[0] > sDate:
+            log(f'WARNING: Ticker {x} is missing stock data in requested range!')
+            continue
+
+        df = df[(df.index >= sDate) & (df.index <= eDate)]
+        df = addBaseIndicatorsToDf(df)
+
+        mult_df[x] = df[colName]
 
     return mult_df
 
