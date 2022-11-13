@@ -7,7 +7,6 @@ from preprocess import addBaseIndicatorsToDf
 cfg = Config()
 
 
-
 def loadRawStockData(ticker, interval):
     # Try to get the file and if it doesn't exist issue a warning
     try:
