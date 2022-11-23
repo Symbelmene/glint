@@ -64,7 +64,7 @@ def checkAndCreateDirectories():
 
 def getYahooFinanceIntervalData(ticker):
     saveToCsvFromYahoo(ticker, interval=Interval.DAY)
-    saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
+    #saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
     return True
 
 def getFinanceData():
