@@ -75,33 +75,48 @@ class Dataset:
 
 
 class LSTM:
-    def __init__(self):
-        pass
+    def __init__(self, inputShape):
+        self.build(inputShape)
 
-    def build(self, x, weights, biases):
-        # reshape to [1, n_input]
-        x = tf.reshape(x, [-1, n_input])
+    def build(self, inputShape):
+        inputs = tf.keras.Input(inputShape)
+        x1 = tf.keras.layers.LSTM(64)(inputs)
+        x1 = tf.keras.layers.Dense(64, activation='relu')(x1)
+        x1 = tf.keras.layers.LSTM(32)(x1)
+        x1 = tf.keras.layers.Dense(32, activation='relu')(x1)
+        x1 = tf.keras.layers.LSTM(16)(x1)
+        x1 = tf.keras.layers.Dense(16, activation='relu')(x1)
+        x1 = tf.keras.layers.LSTM(8)(x1)
+        x1 = tf.keras.layers.Dense(8, activation='relu')(x1)
+        x1 = tf.keras.layers.LSTM(4)(x1)
+        x1 = tf.keras.layers.Dense(4, activation='relu')(x1)
+        outputs = tf.keras.layers.Dense(1)(x1)
 
-        # Generate a n_input-element sequence of inputs
-        # (eg. [had] [a] [general] -> [20] [6] [33])
-        x = tf.split(x, n_input, 1)
-
-        # 1-layer LSTM with n_hidden units.
-        rnn_cell = rnn.BasicLSTMCell(n_hidden)
-
-        # generate prediction
-        outputs, states = rnn.static_rnn(rnn_cell, x, dtype=tf.float32)
-
-        # there are n_input outputs but
-        # we only want the last output
-        return tf.matmul(outputs[-1], weights['out']) + biases['out']
+        self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        self.model.compile(loss='mse',
+                      optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+                      metrics=['mean_absolute_error'])
 
 
 def main():
     dSet = Dataset(Interval.FIVE_MINUTE)
-    #dSet.createTrainset(5, 0.04, 0.2, 20)
+
+    maxIntervalReturn = 5
+    acceptableReturnFraction = 0.04
+    acceptableMaximumReturnFraction = 0.2
+    inputPeriod = 20
+
+    #dSet.createTrainset(maxInterval=maxIntervalReturn,              # Number of time intervals for return to occur
+    #                    acceptableReturn=acceptableReturnFraction,  # Minimum acceptable return fraction
+    #                    maxReturn=acceptableMaximumReturnFraction,  # Maximum acceptable return fraction (to remove anomalies)
+    #                    inputPeriod=inputPeriod)                    # Number of preceeding time intervals to construct input train data from
+
+    input_shape = (20, 14)
+    model = LSTM(input_shape)
 
     dSet.load()
+
+    x = 1
 
 
 if __name__ == '__main__':
