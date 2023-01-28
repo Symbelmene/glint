@@ -183,10 +183,14 @@ def addBaseIndicatorsToDf(ticker, interval):
 
 
 def addBasicIndicatorsToAllCSVs():
+    if not os.path.exists(cfg.DATA_DIR_CLEAN_24H):
+        os.makedirs(cfg.DATA_DIR_CLEAN_24H)
     tickers = [ticker.split('.')[0] for ticker in os.listdir(cfg.DATA_DIR_RAW_24H)]
     for ticker in tqdm(tickers):
         addBaseIndicatorsToDf(ticker, '24H')
 
+    if not os.path.exists(cfg.DATA_DIR_CLEAN_5M):
+        os.makedirs(cfg.DATA_DIR_CLEAN_5M)
     tickers = [ticker.split('.')[0] for ticker in os.listdir(cfg.DATA_DIR_RAW_5M)]
     for ticker in tqdm(tickers):
         addBaseIndicatorsToDf(ticker, '5M')
