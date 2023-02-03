@@ -61,9 +61,10 @@ def optimisePortfolio(portfolioList, sDate, eDate, plot=False):
 
     p_ret = []  # Returns list
     p_vol = []  # Volatility list
-    p_SR = []  # Sharpe Ratio list
-    p_wt = []  # Stock weights list
-    for x in tqdm(range(10000)):
+    p_SR  = []  # Sharpe Ratio list
+    p_wt  = []  # Stock weights list
+    retList = []
+    for _ in tqdm(range(10000)):
         # Generate random weights
         p_weights = np.random.random(num_stocks)
         p_weights /= np.sum(p_weights)
@@ -82,6 +83,9 @@ def optimisePortfolio(portfolioList, sDate, eDate, plot=False):
 
         # Store the weights for each portfolio
         p_wt.append(p_weights)
+
+        retDict = {'return' : ret_1, 'volatility' : vol_1, 'sharpe_ratio': SR_1, 'weights': p_weights}
+        retList.append(retDict)
 
     # Convert to Numpy arrays
     p_ret = np.array(p_ret)
