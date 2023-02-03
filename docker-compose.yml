@@ -4,9 +4,9 @@ services:
         container_name: glint-get
         volumes:
             - "${DB_DIR}:/data"
-            - "${LOG_DIR}:/logs"
+            - "${DB_DIR}:/logs"
         build:
             context: ./
-            dockerfile: Dockerfile
+            dockerfile: getdata.Dockerfile
         environment:
             - DOCKERCONTAINER=TRUE

@@ -12,12 +12,12 @@ class Config:
 
         self.env = parseEnvFile('../.env')
 
-        self.THREADS  = 8
+        self.THREADS  = 20
 
         self.BASE_DIR = self.env['DB_DIR']
         self.TRAIN_DIR = self.BASE_DIR + '/train'
 
-        self.DATA_DIR          = '/data' if self.docker else self.BASE_DIR + '/data'
+        self.DATA_DIR              = '/data' if self.docker else self.BASE_DIR + '/data'
         self.DATA_DIR_24_HOUR  = self.DATA_DIR + '/24_HOUR'
         self.DATA_DIR_5_MINUTE = self.DATA_DIR + '/5_MINUTE'
 

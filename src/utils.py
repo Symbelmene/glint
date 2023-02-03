@@ -7,7 +7,7 @@ from preprocess import addBaseIndicatorsToDf
 cfg = Config()
 
 
-def loadRawStockData(ticker, interval):
+def loadStockData(ticker, interval):
     # Try to get the file and if it doesn't exist issue a warning
     try:
         if interval == Interval.DAY:
@@ -20,7 +20,6 @@ def loadRawStockData(ticker, interval):
     except FileNotFoundError as ex:
         print(ex)
         return None
-
     return df
 
 
@@ -28,7 +27,7 @@ def loadMultipleDFsAndMergeByColumnName(colName, sDate, eDate, interval, tickers
     mult_df = pd.DataFrame()
 
     for x in tickers:
-        df = loadRawStockData(x, interval)
+        df = loadStockData(x, interval)
 
         if not df.index.is_unique:
             df = df.loc[~df.index.duplicated(), :]
@@ -59,4 +58,4 @@ def getValidTickers(interval):
 
 def loadAllRawStockData(interval):
     tickers = getValidTickers(interval)
-    return {ticker : loadRawStockData(ticker, interval) for ticker in tickers}
+    return {ticker : loadStockData(ticker, interval) for ticker in tickers}

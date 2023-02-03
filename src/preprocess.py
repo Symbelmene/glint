@@ -22,21 +22,21 @@ def denormaliseDataframe(df, scaler):
     return pd.DataFrame(arr, columns=df.columns).set_index(df.index)
 
 
-def findReturnPoints(df: pd.DataFrame, maxInterval: int, acceptableReturn: float, maxReturn: float):
-    dfRet = pd.DataFrame()
-    for intvl in range(1, maxInterval):
-        dfRet[f'interval_return_{intvl}'] = df['interval_return'].rolling(intvl).sum().shift(-1*intvl)
-    df['labels'] = dfRet.apply(lambda row: any((val > acceptableReturn) & (val < maxReturn) for val in row), axis=1)
-    return df
-
-
-#def findReturnPoints(wkDict):
-#    df = wkDict['df'][77:]
+#def findReturnPoints(df: pd.DataFrame, maxInterval: int, acceptableReturn: float, maxReturn: float):
 #    dfRet = pd.DataFrame()
-#    for intvl in range(1, wkDict['maxRetInterval']):
-#        dfRet[f'interval_return_{intvl}'] = df['daily_return'].rolling(intvl).sum().shift(-1*intvl)
-#    df['labels'] = dfRet.apply(lambda row: any((val > wkDict['acceptableReturn']) & (val < wkDict['maxReturn']) for val in row), axis=1)
-#    return wkDict['ticker'], df
+#    for intvl in range(1, maxInterval):
+#        dfRet[f'interval_return_{intvl}'] = df['interval_return'].rolling(intvl).sum().shift(-1*intvl)
+#    df['labels'] = dfRet.apply(lambda row: any((val > acceptableReturn) & (val < maxReturn) for val in row), axis=1)
+#    return df
+
+
+def findReturnPoints(wkDict):
+    df = wkDict['df'][77:]
+    dfRet = pd.DataFrame()
+    for intvl in range(1, wkDict['maxRetInterval']):
+        dfRet[f'interval_return_{intvl}'] = df['daily_return'].rolling(intvl).sum().shift(-1*intvl)
+    df['labels'] = dfRet.apply(lambda row: any((val > wkDict['acceptableReturn']) & (val < wkDict['maxReturn']) for val in row), axis=1)
+    return wkDict['ticker'], df
 
 
 def findAllReturnPoints(dfDict, maxRetInterval, acceptableReturn, maxReturn=0.20):
@@ -60,8 +60,6 @@ def findAllReturnPoints(dfDict, maxRetInterval, acceptableReturn, maxReturn=0.20
     totalPoints     = sum([len(df) for df in dfDict.values()])
     print(f'Found {totalGoodPoints} / {totalPoints} valid data points for at least a {100*acceptableReturn}% return within {maxRetInterval} intervals')
     return dfDict
-
-
 
 
 def addDailyReturnToDF(df):

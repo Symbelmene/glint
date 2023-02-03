@@ -61,7 +61,7 @@ class Dataset:
         return df.drop(['Dividends', 'Stock Splits', 'Lagging'], axis=1).dropna()
 
     def __loadDataFromCSV(self, ticker: str) -> pd.DataFrame:
-        return utils.loadRawStockData(ticker, self.interval)
+        return utils.loadStockData(ticker, self.interval)
 
     def __addBasicIndicators(self, df: pd.DataFrame) -> pd.DataFrame:
         return preprocess.addBaseIndicatorsToDf(df)

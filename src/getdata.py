@@ -6,7 +6,7 @@ import warnings
 from multiprocessing.pool import ThreadPool
 warnings.simplefilter("ignore")
 
-from utils import loadRawStockData
+from utils import loadStockData
 from dbg import log
 from config import Config, Interval
 cfg = Config()
@@ -36,9 +36,10 @@ def saveToCsvFromYahoo(ticker, interval):
     period = "max" if interval == Interval.DAY else "60d"
     try:
         if os.path.exists(tickerPath):
-            dfOld = loadRawStockData(tickerFormat, interval)
+            dfOld = loadStockData(tickerFormat, interval)
             df = stock.history(interval=interval.value, period=period)
-            df = pd.concat([dfOld[df.columns], df]).drop_duplicates()
+            df = pd.concat([dfOld[df.columns], df])
+            df = df[~df.index.duplicated(keep='first')]
         else:
             df = stock.history(interval=interval.value, period=period)
             if len(df) < 100:
@@ -64,8 +65,9 @@ def checkAndCreateDirectories():
 
 def getYahooFinanceIntervalData(ticker):
     saveToCsvFromYahoo(ticker, interval=Interval.DAY)
-    #saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
+    saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
     return True
+
 
 def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))

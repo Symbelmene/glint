@@ -1,10 +1,7 @@
 import pandas as pd
 from tqdm import tqdm
 
-import ticker
-import portfolio
-
-from ticker import Ticker
+from financeobjects import Ticker
 
 import utils
 from config import Config, Interval
@@ -12,7 +9,6 @@ cfg = Config()
 
 
 def main():
-    #getFinanceData()
     portfolio = ['CALX', 'NOVT', 'RGEN', 'LLY',
                  'AMD', 'NFLX', 'COST', 'BJ', 'WING',
                  'MSCI', 'CBRE']
@@ -31,6 +27,7 @@ def main():
     for ticker in tqdm(allTickers):
         t = Ticker(ticker, Interval.DAY)
         t.load()
+
 
 if __name__ == '__main__':
     main()
