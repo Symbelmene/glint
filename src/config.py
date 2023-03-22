@@ -21,9 +21,12 @@ class Config:
         self.DATA_DIR_24_HOUR  = self.DATA_DIR + '/24_HOUR'
         self.DATA_DIR_5_MINUTE = self.DATA_DIR + '/5_MINUTE'
 
+        self.PORT_DIR          = self.BASE_DIR + '/portfolios'
+
         self.LOG_DIR  = '/logs' if self.docker else self.BASE_DIR + '/logs'
 
         self.RISK_FREE_RATE = 0.0125
+
 
 def parseEnvFile(envPath):
     if not os.path.exists(envPath):

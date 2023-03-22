@@ -10,6 +10,7 @@ import preprocess
 from config import Config, Interval
 cfg = Config()
 
+
 class Dataset:
     def __init__(self, interval: Interval):
         self.interval = interval

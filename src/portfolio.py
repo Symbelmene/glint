@@ -12,7 +12,6 @@ class Portfolio:
         self.tickers = tickers
 
 
-
 def getPortfolioReturn(df, weights):
     returns = np.log(df / df.shift(1))
 

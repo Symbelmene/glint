@@ -6,8 +6,7 @@ import warnings
 from multiprocessing.pool import ThreadPool
 warnings.simplefilter("ignore")
 
-from utils import loadRawStockData
-from dbg import log
+from utils import loadRawStockData, log
 from config import Config, Interval
 cfg = Config()
 
@@ -63,9 +62,10 @@ def checkAndCreateDirectories():
 
 
 def getYahooFinanceIntervalData(ticker):
-    saveToCsvFromYahoo(ticker, interval=Interval.DAY)
-    #saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
+    #saveToCsvFromYahoo(ticker, interval=Interval.DAY)
+    saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
     return True
+
 
 def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))
