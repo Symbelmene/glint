@@ -35,20 +35,11 @@ def ichimoku(df, ticker=''):
                                   fill='tonexty',
                                   fillcolor=get_fill_color(df['label'].iloc[0]))])
 
-    baseline = go.Scatter(x=df1.index, y=df1['Baseline'],
-                          line=dict(color='pink', width=2), name="Baseline")
-
-    conversion = go.Scatter(x=df1.index, y=df1['Conversion'],
-                            line=dict(color='black', width=1), name="Conversion")
-
-    lagging = go.Scatter(x=df1.index, y=df1['Lagging'],
-                         line=dict(color='purple', width=2), name="Lagging")
-
-    span_a = go.Scatter(x=df1.index, y=df1['SpanA'],
-                        line=dict(color='green', width=2, dash='dot'), name="Span A")
-
-    span_b = go.Scatter(x=df1.index, y=df1['SpanB'],
-                        line=dict(color='red', width=1, dash='dot'), name="Span B")
+    baseline = go.Scatter(x=df1.index, y=df1['Baseline'], line=dict(color='pink', width=2), name="Baseline")
+    conversion = go.Scatter(x=df1.index, y=df1['Conversion'], line=dict(color='black', width=1), name="Conversion")
+    lagging = go.Scatter(x=df1.index, y=df1['Lagging'], line=dict(color='purple', width=2), name="Lagging")
+    span_a = go.Scatter(x=df1.index, y=df1['SpanA'], line=dict(color='green', width=2, dash='dot'), name="Span A")
+    span_b = go.Scatter(x=df1.index, y=df1['SpanB'], line=dict(color='red', width=1, dash='dot'), name="Span B")
 
     fig.add_trace(candle)
     fig.add_trace(baseline)
