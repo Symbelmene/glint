@@ -16,7 +16,7 @@ def mergeDfByColumn(col_name, sdate, edate, *tickers):
     # Will hold data for all dataframes with the same column name
     mult_df = pd.DataFrame()
     for ticker in tickers:
-        df = utils.loadStockData(ticker, Interval.DAY)
+        df = utils.loadRawStockData(ticker, Interval.DAY)
         df = preprocess.addBaseIndicatorsToDf(df)
         mask = (df.index >= pd.to_datetime(sdate)) & (df.index <= pd.to_datetime(edate))
         mult_df[ticker] = df.loc[mask][col_name]

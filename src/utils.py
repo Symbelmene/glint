@@ -36,6 +36,7 @@ def loadRawStockData(ticker, interval):
         print(ex)
         return None
 
+    df = df[~df.index.duplicated(keep='first')]
     return df
 
 

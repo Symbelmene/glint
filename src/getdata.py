@@ -46,7 +46,6 @@ def saveToCsvFromYahoo(ticker, interval):
 
         df.to_csv(tickerPath)
         log(f'{ticker.ljust(4)} {interval.value} was successfully fetched')
-
     except Exception as ex:
         log(f'{ticker.ljust(4)} was unable to be fetched ({ex})')
         return False
@@ -55,7 +54,6 @@ def saveToCsvFromYahoo(ticker, interval):
 
 def checkAndCreateDirectories():
     dirsToMake = [cfg.DATA_DIR, cfg.DATA_DIR_24_HOUR, cfg.DATA_DIR_5_MINUTE, cfg.LOG_DIR]
-
     for dirToMake in dirsToMake:
         if not os.path.exists(dirToMake):
             os.makedirs(dirToMake)
