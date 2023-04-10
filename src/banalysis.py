@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
-from tabulate import tabulate
 from tqdm import tqdm
 import plotly.express as px
+from tabulate import tabulate
+
 import utils
-import preprocess
+import finclasses
 from config import Config, Interval
 cfg = Config()
 
@@ -17,7 +18,7 @@ def mergeDfByColumn(col_name, sdate, edate, *tickers):
     mult_df = pd.DataFrame()
     for ticker in tickers:
         df = utils.loadRawStockData(ticker, Interval.DAY)
-        df = preprocess.addBaseIndicatorsToDf(df)
+        df = finclasses.addBaseIndicatorsToDf(df)
         mask = (df.index >= pd.to_datetime(sdate)) & (df.index <= pd.to_datetime(edate))
         mult_df[ticker] = df.loc[mask][col_name]
     return mult_df
@@ -42,7 +43,7 @@ def plotStockData(eDate, mult_df, sDate):
     fig.show()
 
 
-def optimisePortfolio(portfolioList, sDate, eDate, plot=False):
+def optimisePortfolio(portfolioList, sDate, eDate, plot=False, samples=10000):
     num_stocks = len(portfolioList)
     print('Loading and preprocessing data...')
     mult_df = mergeDfByColumn('Close', sDate, eDate, *portfolioList)
@@ -64,7 +65,7 @@ def optimisePortfolio(portfolioList, sDate, eDate, plot=False):
     p_SR  = []  # Sharpe Ratio list
     p_wt  = []  # Stock weights list
     retList = []
-    for _ in tqdm(range(10000)):
+    for _ in tqdm(range(samples)):
         # Generate random weights
         p_weights = np.random.random(num_stocks)
         p_weights /= np.sum(p_weights)
@@ -155,23 +156,12 @@ def getPortfolioWeighting(share_cost):
     return stock_wts
 
 
-def getPortfolioValueByDate(date, shares, tickers):
-    port_prices = mergeDfByColumn('Close', date, date, *portList)
-    # Convert from dataframe to Python list
-    port_prices = port_prices.values.tolist()
-    # Trick that converts a list of lists into a single list
-    port_prices = sum(port_prices, [])
-    return port_prices
-
-
-def markowitzPortfolioOptimisation(portList):
+def markowitzPortfolioOptimisation(portList, investValue):
     S_DATE = '2019-01-04'
     E_DATE = '2023-01-28'
 
-    portWeights = [7, 8, 15, 14, 3, 3, 17, 6, 11, 14, 1]
-
-    volatility, annualReturn, sharpeWeights = optimisePortfolio(portList, S_DATE, E_DATE, plot=False)
-
+    volatility, annualReturn, sharpeWeights = optimisePortfolio(portList, S_DATE, E_DATE, plot=False, samples=4000)
+    sharpeWeights = [round(e, 3) for e in sharpeWeights]
     # Get all stock prices on the starting date
     port_df_start = mergeDfByColumn('Close', '2022-01-07', '2022-01-07', *portList)
 
@@ -179,22 +169,16 @@ def markowitzPortfolioOptimisation(portList):
     port_prices = port_df_start.values.tolist()
 
     # Trick that converts a list of lists into a single list
-    port_prices = sum(port_prices, [])
+    port_prices = np.array(sum(port_prices, []))
+    portValues = investValue * np.array(sharpeWeights) / 100
 
-    tot_shares, share_cost = getPortFolioShares(105.64, True, portWeights, port_prices)
-
-    # Get list of weights for stocks
-    stock_wts = getPortfolioWeighting(share_cost)
-
-    # Get value at end of year
-    portFolioPrices = getPortfolioValueByDate(E_DATE, tot_shares, portList)
+    shareCounts = portValues / port_prices
 
     portDict = {'tickers'      : portList,
-                'weights'      : portWeights,
                 'prices'       : port_prices,
-                'distribution' : stock_wts,
+                'distribution' : list(portValues),
                 'sharpeweights': sharpeWeights,
-                'shares'       : tot_shares}
+                'shares'       : list(shareCounts)}
 
     portDf = pd.DataFrame(portDict)
 
@@ -207,4 +191,6 @@ if __name__ == '__main__':
     portList = ['CALX', 'NOVT', 'RGEN', 'LLY',
                 'AMD', 'NFLX', 'COST', 'BJ', 'WING',
                 'MSCI', 'CBRE']
-    markowitzPortfolioOptimisation(portList)
+
+    numParetoFrontPoints = 10000
+    markowitzPortfolioOptimisation(portList, numParetoFrontPoints)

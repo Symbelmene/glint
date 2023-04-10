@@ -1,8 +1,10 @@
 import os
 import pandas as pd
+from tqdm import tqdm
+from multiprocessing import Pool
 from datetime import datetime
 from config import Config, Interval
-from preprocess import addBaseIndicatorsToDf
+from finclasses import addBaseIndicatorsToDf
 cfg = Config()
 
 
@@ -76,3 +78,35 @@ def getValidTickers(interval):
 def loadAllRawStockData(interval):
     tickers = getValidTickers(interval)
     return {ticker : loadRawStockData(ticker, interval) for ticker in tickers}
+
+
+def findReturnPoints(wkDict):
+    df = wkDict['df'][77:]
+    dfRet = pd.DataFrame()
+    for intvl in range(1, wkDict['maxRetInterval']):
+        dfRet[f'interval_return_{intvl}'] = df['daily_return'].rolling(intvl).sum().shift(-1*intvl)
+    df['labels'] = dfRet.apply(lambda row: any((val > wkDict['acceptableReturn']) & (val < wkDict['maxReturn']) for val in row), axis=1)
+    return wkDict['ticker'], df
+
+
+def findAllReturnPoints(dfDict, maxRetInterval, acceptableReturn, maxReturn=0.20):
+    '''
+    Finds all points in the dataset at which investing would produce at least
+    <acceptableReturnPerc +float> within <maxRetTime datetime>
+    '''
+
+    workList = [{'ticker' : ticker,
+                 'df' : df,
+                 'maxRetInterval' : maxRetInterval,
+                 'acceptableReturn' : acceptableReturn,
+                 'maxReturn' : maxReturn} for ticker, df in dfDict.items()]
+
+    with Pool(8) as p:
+        dfList = list(tqdm(p.imap(findReturnPoints, workList), total=len(dfDict)))
+
+    dfDict = {k: v for k, v in dfList}
+
+    totalGoodPoints = sum([df['labels'].sum() for df in dfDict.values()])
+    totalPoints     = sum([len(df) for df in dfDict.values()])
+    print(f'Found {totalGoodPoints} / {totalPoints} valid data points for at least a {100*acceptableReturn}% return within {maxRetInterval} intervals')
+    return dfDict
