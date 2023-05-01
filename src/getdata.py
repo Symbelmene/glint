@@ -70,7 +70,6 @@ def getFinanceData():
 
     checkAndCreateDirectories()
 
-
     with ThreadPool(cfg.THREADS) as tp:
         r = list(tp.imap(getYahooFinanceIntervalData, tickers))
 

@@ -48,10 +48,9 @@ def ichimoku(df, ticker=''):
     fig.add_trace(span_a)
     fig.add_trace(span_b)
 
-    fig.update_layout(title=ticker + " Ichimoku",
-                      height=1200, width=1800, showlegend=True)
+    fig.update_layout(title=ticker + " Ichimoku", showlegend=True)
 
-    fig.show()
+    return fig
 
 
 def bollingerBands(df, ticker=''):
@@ -81,19 +80,8 @@ def bollingerBands(df, ticker=''):
     fig.update_xaxes(title="Date", rangeslider_visible=True)
     fig.update_yaxes(title="Price")
 
-    # USED FOR NON-DAILY DATA : Get rid of empty dates and market closed
-    # fig.update_layout(title=ticker + " Bollinger Bands",
-    # height=1200, width=1800,
-    #               showlegend=True,
-    #               xaxis_rangebreaks=[
-    #         dict(bounds=["sat", "mon"]),
-    #         dict(bounds=[16, 9.5], pattern="hour"),
-    #         dict(values=["2021-12-25", "2022-01-01"])
-    #     ])
-
-    fig.update_layout(title=ticker + " Bollinger Bands",
-                      height=1200, width=1800, showlegend=True)
-    fig.show()
+    fig.update_layout(title=ticker + " Bollinger Bands", showlegend=True)
+    return fig
 
 
 def plotStockTickersInPeriod(colName, tickers, interval, sTime, eTime):

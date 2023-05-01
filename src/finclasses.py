@@ -1,9 +1,13 @@
 import os
 import math
 from tqdm import tqdm
+from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 import plotly.express as px
+
+from config import Config
+cfg = Config()
 
 
 class Portfolio:
@@ -196,3 +200,14 @@ def addBaseIndicatorsToDf(df):
     df = addIchimoku(df)
     return df
 
+
+def loadTicker(path):
+    tickerName = path.split('/')[-1].split('.')[0]
+    return tickerName, Ticker(path)
+
+
+def loadTickers(path, processes=cfg.PROCESSES):
+    tickerPaths = [f'{path}/{f}' for f in os.listdir(path)][:500]
+    with Pool(processes) as p:
+        tickers = list(tqdm(p.imap(loadTicker, tickerPaths), total=len(tickerPaths)))
+    return {name: ticker for name, ticker in tickers}
