@@ -110,3 +110,11 @@ def findAllReturnPoints(dfDict, maxRetInterval, acceptableReturn, maxReturn=0.20
     totalPoints     = sum([len(df) for df in dfDict.values()])
     print(f'Found {totalGoodPoints} / {totalPoints} valid data points for at least a {100*acceptableReturn}% return within {maxRetInterval} intervals')
     return dfDict
+
+
+def pruneTickerList():
+    # Remove tickers that do not have more than X entries
+    # Remove tickers that do not have current entries
+    # Remove tickers with large gaps in data
+    # Remove tickes from csv that do not exist in database
+    pass
