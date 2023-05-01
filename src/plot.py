@@ -48,13 +48,23 @@ def ichimoku(df, ticker=''):
     fig.add_trace(span_a)
     fig.add_trace(span_b)
 
-    fig.update_layout(title=ticker + " Ichimoku",
-                      height=1200, width=1800, showlegend=True)
+    fig.update_layout(title=ticker + " Ichimoku", showlegend=False)
+    fig.update_layout(xaxis={'rangeslider': {'visible': False}})
+    return fig
 
-    fig.show()
+
+def candle(df, ticker=''):
+    candle = go.Candlestick(x=df.index, open=df['Open'],
+                            high=df['High'], low=df["Low"], close=df['Close'], name="Candlestick")
+
+    fig = go.Figure()
+    fig.add_trace(candle)
+    fig.update_layout(title=ticker + " Candle", showlegend=False)
+    fig.update_layout(xaxis={'rangeslider': {'visible': False}})
+    return fig
 
 
-def bollingerBands(df, ticker=''):
+def bollinger(df, ticker=''):
     fig = go.Figure()
 
     candle = go.Candlestick(x=df.index, open=df['Open'],
@@ -81,19 +91,9 @@ def bollingerBands(df, ticker=''):
     fig.update_xaxes(title="Date", rangeslider_visible=True)
     fig.update_yaxes(title="Price")
 
-    # USED FOR NON-DAILY DATA : Get rid of empty dates and market closed
-    # fig.update_layout(title=ticker + " Bollinger Bands",
-    # height=1200, width=1800,
-    #               showlegend=True,
-    #               xaxis_rangebreaks=[
-    #         dict(bounds=["sat", "mon"]),
-    #         dict(bounds=[16, 9.5], pattern="hour"),
-    #         dict(values=["2021-12-25", "2022-01-01"])
-    #     ])
-
-    fig.update_layout(title=ticker + " Bollinger Bands",
-                      height=1200, width=1800, showlegend=True)
-    fig.show()
+    fig.update_layout(title=ticker + " Bollinger Bands", showlegend=False)
+    fig.update_layout(xaxis={'rangeslider': {'visible': False}})
+    return fig
 
 
 def plotStockTickersInPeriod(colName, tickers, interval, sTime, eTime):

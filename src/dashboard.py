@@ -1,31 +1,49 @@
-import os
+import json
 import pandas as pd
-from tqdm import tqdm
+from datetime import timedelta
+
 import plotly.express as px
+from dash import Dash, dcc, html
+from dash.dependencies import Input, Output
 
-from finclasses import Ticker, Portfolio
+from plot import ichimoku, bollinger, candle
+from finclasses import loadTickers
+from config import Config
+cfg = Config()
+
+tickerDict = {}
+dfSharpe = pd.DataFrame()
 
 
-def graphicalShortList(path, maxVol=5.0, minRet=0.0, maxRet=10.0):
-    tickerList = []
+def calculateTickerBaseValues(ticker, startTime):
+    ticker.slice(start=startTime)
+    if ticker.data.index.max() - ticker.data.index.min() < timedelta(days=100):
+        return None
+    try:
+        return {'Ticker': ticker.name,
+                'Return': ticker.calc_return(),
+                'Volatility': ticker.calc_volatility(),
+                'Sharpe': ticker.calc_sharpe()}
+    except Exception:
+        print(f'Could not analyse stock {ticker.name}. Skipping...')
+        return None
+
+
+def prepSharpeTable(tickers):
     startTime = pd.to_datetime('2020-01-01')
-    for tickerPath in tqdm(os.listdir(path)):
-        ticker = Ticker(path + '/' + tickerPath)
-        ticker.slice(start=startTime)
-        tickerList.append({
-            'Ticker': ticker.name,
-            'Return': ticker.calc_return(),
-            'Volatility': ticker.calc_volatility(),
-            'Sharpe': ticker.calc_sharpe()})
+    tickerList = [calculateTickerBaseValues(ticker, startTime) for name, ticker in tickers.items()]
+    return [tDict for tDict in tickerList if tDict is not None]
 
-    df = pd.DataFrame(tickerList)
+
+def graphicalShortList(maxVol=5.0, minRet=0.0, maxRet=10.0):
+    df = dfSharpe
     df = df[df['Volatility'] < maxVol]
     df = df[df['Return'] > minRet]
     df = df[df['Return'] < maxRet]
 
     fig = px.scatter(df, x=df['Volatility'], y=df['Return'],
                      custom_data=['Ticker', 'Return', 'Volatility'])
-    fig.update_layout(height=800, width=1200, showlegend=True)
+    fig.update_layout(showlegend=True)
     fig.update_traces(
         hovertemplate="<br>".join([
             "Col1: %{customdata[0]}",
@@ -33,23 +51,108 @@ def graphicalShortList(path, maxVol=5.0, minRet=0.0, maxRet=10.0):
             "Col3: %{customdata[2]}",
         ])
     )
-    fig.show()
+    return fig
+
+
+def dashboard():
+    external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+    app = Dash(__name__, external_stylesheets=external_stylesheets)
+
+    styles = {
+        'pre': {
+            'border': 'thin lightgrey solid',
+            'overflowX': 'scroll'
+        }
+    }
+
+    fig = graphicalShortList(maxVol=2, minRet=0.5, maxRet=4)
+    fig.update_layout(clickmode='event+select')
+    fig.update_traces(marker_size=5)
+
+    app.layout = html.Div([
+        html.Div([
+            dcc.Graph(
+                id='sharpe-plot',
+                figure=fig,
+                hoverData={'points': [{'customdata': [None]}]}
+            ),
+        ], style={'display': 'inline-block', 'width': '49%', 'height': '40%'}),
+
+        html.Div([
+            dcc.Graph(id='current-ticker-ichimoku'),
+            dcc.RadioItems(
+                ['Candle', 'Bollinger', 'Ichimoku'], 'Candle',
+                id='graph-plot-type',
+                labelStyle={'display': 'inline-block', 'marginTop': '5px'})
+        ], style={'display': 'inline-block', 'width': '49%'}),
+
+        html.Div(className='row', children=[
+            html.Div([
+                dcc.Markdown("""
+                    **Hover Data**
+                """),
+                html.Pre(id='hover-data', style=styles['pre']),
+            ], className='three columns'),
+        ])
+    ])
+
+    @app.callback(
+        Output('hover-data', 'children'),
+        Input('sharpe-plot', 'hoverData'))
+    def display_hover_data(hoverData):
+        return json.dumps(hoverData, indent=2)
+
+    #@app.callback(
+    #    Output('current-ticker-bollinger', 'figure'),
+    #    Input('sharpe-plot', 'hoverData'))
+    #def drawTickerBollinger(hoverData):
+    #    if hoverData == None:
+    #        tickerName = list(tickerDict.keys())[0]
+    #    else:
+    #        tickerName = hoverData['points'][0]['customdata'][0]
+    #    currTicker = tickerDict[tickerName]
+    #    currTicker.preprocess()
+    #    fig = bollingerBands(currTicker.data, ticker=tickerName)
+    #    return fig
+
+    @app.callback(
+        Output('current-ticker-ichimoku', 'figure'),
+        Input('sharpe-plot', 'hoverData'),
+        Input('graph-plot-type', 'value'))
+    def drawTickerIchimoku(hoverData, plotType):
+        global tickerDict
+        if hoverData == None:
+            tickerName = list(tickerDict.keys())[0]
+        else:
+            tickerName = hoverData['points'][0]['customdata'][0]
+
+        if tickerName is None:
+            tickerName = list(tickerDict.keys())[0]
+
+        currTicker = tickerDict[tickerName]
+        currTicker.preprocess()
+        if plotType == 'Ichimoku':
+            fig = ichimoku(currTicker.data, ticker=tickerName)
+        if plotType == 'Bollinger':
+            fig = bollinger(currTicker.data, ticker=tickerName)
+        if plotType == 'Candle':
+            fig = candle(currTicker.data, ticker=tickerName)
+        return fig
+
+    app.run_server(debug=True)
 
 
 def main():
-    dbPath = 'D:/findata/data/24_HOUR'
+    global tickerDict, dfSharpe
+    if len(tickerDict) == 0:
+        tickerDict = loadTickers(cfg.DATA_DIR_24_HOUR, sample=100)
+        dfSharpe = pd.DataFrame(prepSharpeTable(tickerDict))
 
-    graphicalShortList(dbPath,
-                       maxVol=2,
-                       minRet=0.5,
-                       maxRet=4)
+    dashboard()
 
     # TODO Display linked graphs of scatter and stock candle
     # TODO Be able to change volatility and return in the dashboard
-    # TODO Allow selection of multiple tickeres
+    # TODO Allow selection of multiple tickers
     # TODO Add button to auto-optimise portfolio and display weights
     # TODO Dockerise the whole shebang
-
-
-if __name__ == '__main__':
-    main()
