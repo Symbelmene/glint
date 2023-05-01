@@ -1,14 +1,13 @@
 import json
 import pandas as pd
-from tqdm import tqdm
 from datetime import timedelta
 
 import plotly.express as px
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 
-from plot import bollingerBands, ichimoku
-from finclasses import Ticker, Portfolio, loadTickers
+from plot import ichimoku, bollinger, candle
+from finclasses import loadTickers
 from config import Config
 cfg = Config()
 
@@ -16,24 +15,24 @@ tickerDict = {}
 dfSharpe = pd.DataFrame()
 
 
-def prepSharpeTable(tickers):
-    startTime = pd.to_datetime('2020-01-01')
-    tickerList = []
-    for name, ticker in tqdm(tickers.items()):
-        ticker.slice(start=startTime)
-        if ticker.data.index.max() - ticker.data.index.min() < timedelta(days=100):
-            continue
-
-        try:
-            tickerList.append({
-                'Ticker': ticker.name,
+def calculateTickerBaseValues(ticker, startTime):
+    ticker.slice(start=startTime)
+    if ticker.data.index.max() - ticker.data.index.min() < timedelta(days=100):
+        return None
+    try:
+        return {'Ticker': ticker.name,
                 'Return': ticker.calc_return(),
                 'Volatility': ticker.calc_volatility(),
-                'Sharpe': ticker.calc_sharpe()})
-        except Exception:
-            print(f'Could not analyse stock {name}. Skipping...')
-            continue
-    return tickerList
+                'Sharpe': ticker.calc_sharpe()}
+    except Exception:
+        print(f'Could not analyse stock {ticker.name}. Skipping...')
+        return None
+
+
+def prepSharpeTable(tickers):
+    startTime = pd.to_datetime('2020-01-01')
+    tickerList = [calculateTickerBaseValues(ticker, startTime) for name, ticker in tickers.items()]
+    return [tDict for tDict in tickerList if tDict is not None]
 
 
 def graphicalShortList(maxVol=5.0, minRet=0.0, maxRet=10.0):
@@ -44,7 +43,7 @@ def graphicalShortList(maxVol=5.0, minRet=0.0, maxRet=10.0):
 
     fig = px.scatter(df, x=df['Volatility'], y=df['Return'],
                      custom_data=['Ticker', 'Return', 'Volatility'])
-    fig.update_layout(height=800, width=1200, showlegend=True)
+    fig.update_layout(showlegend=True)
     fig.update_traces(
         hovertemplate="<br>".join([
             "Col1: %{customdata[0]}",
@@ -78,11 +77,14 @@ def dashboard():
                 figure=fig,
                 hoverData={'points': [{'customdata': [None]}]}
             ),
-        ], style={'display': 'inline-block', 'width': '49%'}),
+        ], style={'display': 'inline-block', 'width': '49%', 'height': '40%'}),
 
         html.Div([
-            #dcc.Graph(id='current-ticker-bollinger'),
             dcc.Graph(id='current-ticker-ichimoku'),
+            dcc.RadioItems(
+                ['Candle', 'Bollinger', 'Ichimoku'], 'Candle',
+                id='graph-plot-type',
+                labelStyle={'display': 'inline-block', 'marginTop': '5px'})
         ], style={'display': 'inline-block', 'width': '49%'}),
 
         html.Div(className='row', children=[
@@ -116,15 +118,26 @@ def dashboard():
 
     @app.callback(
         Output('current-ticker-ichimoku', 'figure'),
-        Input('sharpe-plot', 'hoverData'))
-    def drawTickerIchimoku(hoverData):
+        Input('sharpe-plot', 'hoverData'),
+        Input('graph-plot-type', 'value'))
+    def drawTickerIchimoku(hoverData, plotType):
+        global tickerDict
         if hoverData == None:
             tickerName = list(tickerDict.keys())[0]
         else:
             tickerName = hoverData['points'][0]['customdata'][0]
+
+        if tickerName is None:
+            tickerName = list(tickerDict.keys())[0]
+
         currTicker = tickerDict[tickerName]
         currTicker.preprocess()
-        fig = ichimoku(currTicker.data, ticker=tickerName)
+        if plotType == 'Ichimoku':
+            fig = ichimoku(currTicker.data, ticker=tickerName)
+        if plotType == 'Bollinger':
+            fig = bollinger(currTicker.data, ticker=tickerName)
+        if plotType == 'Candle':
+            fig = candle(currTicker.data, ticker=tickerName)
         return fig
 
     app.run_server(debug=True)
@@ -132,8 +145,9 @@ def dashboard():
 
 def main():
     global tickerDict, dfSharpe
-    tickerDict = loadTickers(cfg.DATA_DIR_24_HOUR)
-    dfSharpe   = pd.DataFrame(prepSharpeTable(tickerDict))
+    if len(tickerDict) == 0:
+        tickerDict = loadTickers(cfg.DATA_DIR_24_HOUR, sample=100)
+        dfSharpe = pd.DataFrame(prepSharpeTable(tickerDict))
 
     dashboard()
 

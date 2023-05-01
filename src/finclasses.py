@@ -1,5 +1,6 @@
 import os
 import math
+import random
 from tqdm import tqdm
 from multiprocessing import Pool
 import numpy as np
@@ -206,8 +207,10 @@ def loadTicker(path):
     return tickerName, Ticker(path)
 
 
-def loadTickers(path, processes=cfg.PROCESSES):
-    tickerPaths = [f'{path}/{f}' for f in os.listdir(path)][:500]
+def loadTickers(path, sample=None, processes=cfg.PROCESSES):
+    tickerPaths = [f'{path}/{f}' for f in os.listdir(path)]
+    if sample:
+        tickerPaths = random.sample(tickerPaths, sample)
     with Pool(processes) as p:
         tickers = list(tqdm(p.imap(loadTicker, tickerPaths), total=len(tickerPaths)))
     return {name: ticker for name, ticker in tickers}

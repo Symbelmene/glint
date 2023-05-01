@@ -48,12 +48,23 @@ def ichimoku(df, ticker=''):
     fig.add_trace(span_a)
     fig.add_trace(span_b)
 
-    fig.update_layout(title=ticker + " Ichimoku", showlegend=True)
-
+    fig.update_layout(title=ticker + " Ichimoku", showlegend=False)
+    fig.update_layout(xaxis={'rangeslider': {'visible': False}})
     return fig
 
 
-def bollingerBands(df, ticker=''):
+def candle(df, ticker=''):
+    candle = go.Candlestick(x=df.index, open=df['Open'],
+                            high=df['High'], low=df["Low"], close=df['Close'], name="Candlestick")
+
+    fig = go.Figure()
+    fig.add_trace(candle)
+    fig.update_layout(title=ticker + " Candle", showlegend=False)
+    fig.update_layout(xaxis={'rangeslider': {'visible': False}})
+    return fig
+
+
+def bollinger(df, ticker=''):
     fig = go.Figure()
 
     candle = go.Candlestick(x=df.index, open=df['Open'],
@@ -80,7 +91,8 @@ def bollingerBands(df, ticker=''):
     fig.update_xaxes(title="Date", rangeslider_visible=True)
     fig.update_yaxes(title="Price")
 
-    fig.update_layout(title=ticker + " Bollinger Bands", showlegend=True)
+    fig.update_layout(title=ticker + " Bollinger Bands", showlegend=False)
+    fig.update_layout(xaxis={'rangeslider': {'visible': False}})
     return fig
 
 
