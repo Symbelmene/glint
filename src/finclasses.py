@@ -147,6 +147,9 @@ class Ticker:
     def calc_sharpe(self):
         return self.calc_return() / self.calc_volatility()
 
+    def calc_rolling_return(self, period):
+        self.data[f'Rolling_Return_{period}'] = self.data['Close'] / self.data['Close'].shift(period) - 1
+
 
 def loadRawStockData(path):
     df = pd.read_csv(path, index_col=0, parse_dates=['Date'])

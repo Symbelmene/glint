@@ -6,7 +6,7 @@ import plotly.express as px
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output
 
-from plot import ichimoku, bollinger, candle
+from src.utils import plotBollinger, plotCandle, plotIchimoku
 from finclasses import loadTickers
 from config import Config
 cfg = Config()
@@ -133,21 +133,20 @@ def dashboard():
         currTicker = tickerDict[tickerName]
         currTicker.preprocess()
         if plotType == 'Ichimoku':
-            fig = ichimoku(currTicker.data, ticker=tickerName)
+            fig = plotIchimoku(currTicker.data, ticker=tickerName)
         if plotType == 'Bollinger':
-            fig = bollinger(currTicker.data, ticker=tickerName)
+            fig = plotBollinger(currTicker.data, ticker=tickerName)
         if plotType == 'Candle':
-            fig = candle(currTicker.data, ticker=tickerName)
+            fig = plotCandle(currTicker.data, ticker=tickerName)
         return fig
 
-    app.run_server(debug=True)
+    app.run_server(debug=False)
 
 
 def main():
     global tickerDict, dfSharpe
-    if len(tickerDict) == 0:
-        tickerDict = loadTickers(cfg.DATA_DIR_24_HOUR, sample=100)
-        dfSharpe = pd.DataFrame(prepSharpeTable(tickerDict))
+    tickerDict = loadTickers(cfg.DATA_DIR_24_HOUR, sample=1000)
+    dfSharpe = pd.DataFrame(prepSharpeTable(tickerDict))
 
     dashboard()
 
