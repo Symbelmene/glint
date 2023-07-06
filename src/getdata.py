@@ -69,14 +69,33 @@ def getFinanceData():
     tickers = list(getColumnFromCsv(f"../Wilshire-5000-Stocks.csv", "Ticker"))
 
     checkAndCreateDirectories()
-
     with ThreadPool(cfg.THREADS) as tp:
         r = list(tp.imap(getYahooFinanceIntervalData, tickers))
 
 
-def main():
-    getFinanceData()
+def trimRedundantTickers():
+    dfTickers = pd.read_csv(f"../Wilshire-5000-Stocks.csv")
+    tickersToRemove = []
+    for idx, row in dfTickers.iterrows():
+        ticker = row["Ticker"]
+        tickerFormat = ticker.replace(".", "_")
+        df = loadRawStockData(tickerFormat, Interval.DAY)
+        if df is None:
+            log(f'{ticker.ljust(4)} does not have enough data to be useful!')
+            tickersToRemove.append(ticker)
+            continue
+        if len(df) < 100:
+            log(f'{ticker.ljust(4)} does not have enough data to be useful!')
+            os.remove(f'{cfg.DATA_DIR_24_HOUR}/{tickerFormat}.csv')
+            os.remove(f'{cfg.DATA_DIR_5_MINUTE}/{tickerFormat}.csv')
+            tickersToRemove.append(ticker)
+    dfTickers = dfTickers[~dfTickers["Ticker"].isin(tickersToRemove)]
+    dfTickers.to_csv(f"../Wilshire-5000-Stocks.csv", index=False)
 
+
+def main():
+    #getFinanceData()
+    trimRedundantTickers()
 
 if __name__ == '__main__':
     main()
