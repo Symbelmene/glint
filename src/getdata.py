@@ -1,5 +1,4 @@
 import os
-import traceback
 import pandas as pd
 import yfinance as yf
 import warnings
@@ -94,8 +93,9 @@ def trimRedundantTickers():
 
 
 def main():
-    #getFinanceData()
+    getFinanceData()
     trimRedundantTickers()
+
 
 if __name__ == '__main__':
     main()

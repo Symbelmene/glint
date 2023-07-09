@@ -1,4 +1,5 @@
 import os
+import math
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -122,14 +123,6 @@ def findAllReturnPoints(dfDict, maxRetInterval, acceptableReturn, maxReturn=0.20
     totalPoints     = sum([len(df) for df in dfDict.values()])
     print(f'Found {totalGoodPoints} / {totalPoints} valid data points for at least a {100*acceptableReturn}% return within {maxRetInterval} intervals')
     return dfDict
-
-
-def pruneTickerList():
-    # Remove tickers that do not have more than X entries
-    # Remove tickers that do not have current entries
-    # Remove tickers with large gaps in data
-    # Remove tickes from csv that do not exist in database
-    pass
 
 
 ###################################################################
@@ -404,3 +397,15 @@ def markowitzPortfolioOptimisation(portList, investValue):
     print(tabulate(portDf, headers='keys', tablefmt='psql'))
     print(f'Volatility    : {round(volatility, 3)}')
     print(f'Annual Return : {round(annualReturn, 3)}')
+
+
+def calculateVolatility(col):
+    return col.std() / math.sqrt(len(col))
+
+
+def calculateReturn(col):
+    return np.sum(col / col.shift(1))
+
+
+def calculateSharpeRatio(col):
+    return calculateReturn(col) / calculateVolatility(col)

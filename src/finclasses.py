@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
+import utils
 from config import Config
 cfg = Config()
 
@@ -97,14 +98,14 @@ class Portfolio:
 
 
 class Ticker:
-    def __init__(self, path, preprocess=False):
+    def __init__(self, path, start=None, end=None):
         self.name = path.split('/')[-1].replace('.csv', '')
         self.path = path
         self.data = loadRawStockData(path)
         self.normalised = False
 
-        if preprocess:
-            self.preprocess()
+        if start or end:
+            self.slice(start, end)
 
     def preprocess(self):
         self.data = addBaseIndicatorsToDf(self.data)
@@ -138,17 +139,14 @@ class Ticker:
 
     def calc_volatility(self):
         # Returns volatility for current time periood
-        return self.data['Close'].std() / math.sqrt(len(self.data))
+        return utils.calculateVolatility(self.data['Close'])
 
     def calc_return(self):
         # Calculates return for given period as decimal (0.0 == break even)
-        return np.sum(self.data['Close'] / self.data['Close'].shift(1) - 1)
+        return utils.calculateReturn(self.data['Close'])
 
     def calc_sharpe(self):
-        return self.calc_return() / self.calc_volatility()
-
-    def calc_rolling_return(self, period):
-        self.data[f'Rolling_Return_{period}'] = self.data['Close'] / self.data['Close'].shift(period) - 1
+        return utils.calculateSharpeRatio(self.data['Close'])
 
 
 def loadRawStockData(path):
@@ -206,6 +204,8 @@ def addBaseIndicatorsToDf(df):
 
 
 def loadTicker(path):
+    if '.csv' not in path:
+        path += '.csv'
     tickerName = path.split('/')[-1].split('.')[0]
     return tickerName, Ticker(path)
 
