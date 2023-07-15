@@ -1,7 +1,14 @@
-import gymnasium as gym
-from gymnasium import Env
+import time
+import tensorflow as tf
+from tensorflow.keras import layers
+from tensorflow.keras import optimizers
+from tensorflow.keras import losses
+from tensorflow.keras import metrics
+from tensorflow.keras import Model, Input
 import numpy as np
 import pandas as pd
+import gymnasium as gym
+from gymnasium import Env
 
 import utils
 from config import Config, Interval
@@ -166,7 +173,38 @@ class Stock:
         self.data = self.data[mask]
 
 
+class Agent:
+    def __init__(self, numStocks, windowSize):
+        self.numStocks = numStocks
+        self.windowSize = windowSize
+        self.numActions = 2 * numStocks + 1 # Buy or sell per stock + hold
+
+        self.policyNetwork = self.buildModel()
+        self.targetNetwork = self.buildModel()
+
+    def buildModel(self):
+        # Builds and LSTM model using the windowSize and numStocks as input and numActions
+        # as output
+        inputLayer  = Input(shape=(self.windowSize, self.numStocks))
+        lstmLayer   = layers.LSTM(32)(inputLayer)
+        denseLayer  = layers.Dense(self.numActions, activation='linear')(lstmLayer)
+        outputLayer = layers.Softmax()(denseLayer)
+        model       = Model(inputs=inputLayer, outputs=outputLayer)
+        model.compile(optimizer='adam', loss='mse')
+        return model
+
+    def getAction(self, state):
+        # Returns an action based on the current state
+        return self.policyNetwork.predict(state)
+
+    def updateTargetNetwork(self):
+        # Updates the target network with the weights of the policy network
+        self.targetNetwork.set_weights(self.policyNetwork.get_weights())
+
+
 def main():
+    numEpisodes = 10
+    # Initialise Environment
     sm = StockMarket(numStocks=5,
                      windowSize=10,
                      start=pd.to_datetime('2019-01-01'),
@@ -174,20 +212,23 @@ def main():
                      startMoney=10000,
                      buyAmount=1000)
 
-    for _ in range(10):
-        try:
-            sm.reset()
-            break
-        except ValueError as e:
-            print(e)
+    # Initialise Agent with target and policy networks
+    agent = Agent(numStocks=5, windowSize=10)
 
-    # Test actions
-    while True:
-        action = sm.action_space.sample()
-        obs, reward, done, info = sm.step(action)
+    # Initialise replay memory
+    replayMemory = []
 
-        if done == True:
-            break
+    for episode in range(numEpisodes):
+        # Reset the environment
+        sm.reset()
+
+        # Run episode
+        while True:
+            action = sm.action_space.sample()
+            state, reward, done, info = sm.step(action)
+
+            if done == True:
+                break
 
 
 if __name__ == '__main__':
