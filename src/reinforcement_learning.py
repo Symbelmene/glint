@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 
 import utils
-from config import Config
+from config import Config, Interval
 cfg = Config()
 
 
 class StockMarket(Env):
-    def __init__(self, numStocks, windowSize, start, end, startMoney):
+    def __init__(self, numStocks, windowSize, start, end, startMoney, buyAmount=1000):
         super(StockMarket, self).__init__()
 
         # Define observation space: This will randomly select numStocks stocks from the dataset and create an
@@ -32,10 +32,12 @@ class StockMarket(Env):
         # Define the starting money
         self.startMoney = startMoney
 
+        # Store the buy amount
+        self.buyAmount = buyAmount
+
     def reset(self):
         # Reset start money and holdings
         self.money = self.startMoney
-        self.holdings = np.zeros(len(self.tickers))
 
         # Reset the reward
         self.totalReward = 0
@@ -44,17 +46,18 @@ class StockMarket(Env):
         self.currStep = 0
 
         # Choose numStocks random stocks from the dataset
-        validTickers = utils.getValidTickers(cfg.DATA_DIR_24_HOUR)
+        validTickers = utils.getValidTickers(Interval.DAY)
         self.tickers = np.random.choice(validTickers, size=self.observation_shape[0], replace=False)
         stocks = [Stock(ticker) for ticker in self.tickers]
+        self.holdings = {ticker : 0 for ticker in self.tickers}
 
         # Slice the ticker frames on the start and end dates then merge them into one dataframe
         for stock in stocks:
             stock.slice(self.start, self.end)
 
-        self.stockData = pd.concat([stock.data for stock in stocks], axis=1, keys=self.tickers)
+        self.stockData = pd.concat([stock.data['Close'] for stock in stocks], axis=1, keys=self.tickers)
 
-        self.window = self.stockData.iloc[:self.windowSize]
+        self.window = self.stockData.iloc[:self.observation_shape[1]]
 
     def get_action_meanings(self):
         actionList = ['Hold']
@@ -64,10 +67,52 @@ class StockMarket(Env):
         return {idx: action for idx, action in enumerate(actionList)}
 
     def step(self, action):
-        pass
+        # Carry out the action
+        if action == 0:
+            # Hold
+            report = "Holding"
+        elif action % 2 == 1:
+            # Buy
+            ticker = self.tickers[(action-1)//2]
+            price = self.window.iloc[-1][ticker]
+            if self.money >= self.buyAmount:
+                self.money -= self.buyAmount
+                numShares = self.buyAmount // price
+                self.holdings[ticker] += numShares
+                report = f"Bought {numShares} shares of {ticker} at {round(price, 3)}"
+            else:
+                report = f"ERROR: Not enough money to buy {ticker}"
+            #    raise ValueError(f"ERROR: Not enough money to buy {ticker}")
+        elif action % 2 == 0:
+            # Sell
+            ticker = self.tickers[(action-2)//2]
+            price = self.window.iloc[-1][ticker]
+            if self.holdings[ticker] > 0:
+                self.money += price * self.holdings[ticker]
+                self.holdings[ticker] = 0
+                report = f"Sold {ticker} at {round(price, 3)}"
+            else:
+                report = f"ERROR: No {ticker} to sell"
+            #    raise ValueError(f"ERROR: No {ticker} to sell")
 
-    def reset(self):
-        pass
+        # Increment the step counter
+        self.currStep += 1
+
+        # Get the new state window
+        newWindow = self.stockData.iloc[self.currStep:self.currStep+self.observation_shape[1]]
+
+        print(f"Step {self.currStep}: {report}")
+        print(self.holdings)
+        print(self.money)
+
+        reward = self.money
+
+        # Determine if the episode is over
+        done = False
+        if self.currStep == len(self.stockData) - self.observation_shape[1]:
+            done = True
+
+        return newWindow, reward, done, []
 
     def render(self):
         pass
@@ -110,11 +155,20 @@ class Stock:
 def main():
     sm = StockMarket(numStocks=5,
                      windowSize=10,
-                     start='2019-01-01',
-                     end='2020-01-01',
-                     startMoney=10000)
+                     start=pd.to_datetime('2019-01-01'),
+                     end=pd.to_datetime('2020-01-01'),
+                     startMoney=10000,
+                     buyAmount=1000)
 
     sm.reset()
+
+    # Test actions
+    while True:
+        action = sm.action_space.sample()
+        obs, reward, done, info = sm.step(action)
+
+        if done == True:
+            break
 
 
 if __name__ == '__main__':
