@@ -66,7 +66,7 @@ class StockMarket(Env):
             actionList.append(f'Sell {ticker}')
         return {idx: action for idx, action in enumerate(actionList)}
 
-    def step(self, action):
+    def step(self, action, verbose=False):
         # Carry out the action
         if action == 0:
             # Hold
@@ -82,7 +82,6 @@ class StockMarket(Env):
                 report = f"Bought {numShares} shares of {ticker} at {round(price, 3)}"
             else:
                 report = f"ERROR: Not enough money to buy {ticker}"
-            #    raise ValueError(f"ERROR: Not enough money to buy {ticker}")
         elif action % 2 == 0:
             # Sell
             ticker = self.tickers[(action-2)//2]
@@ -93,17 +92,12 @@ class StockMarket(Env):
                 report = f"Sold {ticker} at {round(price, 3)}"
             else:
                 report = f"ERROR: No {ticker} to sell"
-            #    raise ValueError(f"ERROR: No {ticker} to sell")
 
         # Increment the step counter
         self.currStep += 1
 
         # Get the new state window
-        newWindow = self.stockData.iloc[self.currStep:self.currStep+self.observation_shape[1]]
-
-        print(f"Step {self.currStep}: {report}")
-        print(self.holdings)
-        print(self.money)
+        self.window = self.stockData.iloc[self.currStep:self.currStep+self.observation_shape[1]]
 
         reward = self.money
 
@@ -112,7 +106,27 @@ class StockMarket(Env):
         if self.currStep == len(self.stockData) - self.observation_shape[1]:
             done = True
 
-        return newWindow, reward, done, []
+        if verbose:
+            self.summariseState(report)
+
+        return self.window, reward, done, []
+
+    def summariseState(self, report):
+        print('\n')
+        print('#' * 30)
+        print(f"STEP {self.currStep}")
+        print(report)
+        totalShareValue = 0
+        for idx, (ticker, shares) in enumerate(self.holdings.items()):
+            if shares > 0:
+                shareValue = round(shares*self.window.iloc[-1, idx], 2)
+                shareStr = f'(${shareValue})'
+                print(f"{ticker.ljust(5)}: {shares} {shareStr.rjust(8)} shares")
+                totalShareValue += shareValue
+        print('-'*20)
+        print(f'Cash : ${round(self.money, 2)}')
+        print(f'Net  : ${round(totalShareValue + self.money, 2)}')
+        print('#' * 30)
 
     def render(self):
         pass
@@ -160,7 +174,12 @@ def main():
                      startMoney=10000,
                      buyAmount=1000)
 
-    sm.reset()
+    for _ in range(10):
+        try:
+            sm.reset()
+            break
+        except ValueError as e:
+            print(e)
 
     # Test actions
     while True:
