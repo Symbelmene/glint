@@ -1,12 +1,12 @@
 import time
-import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras import optimizers
-from tensorflow.keras import losses
-from tensorflow.keras import metrics
-from tensorflow.keras import Model, Input
+import random
+import itertools
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+from keras import layers
+from collections import namedtuple
+from statistics import mean
 import gymnasium as gym
 from gymnasium import Env
 
@@ -14,6 +14,9 @@ import utils
 from config import Config, Interval
 cfg = Config()
 
+# Initialize tensorboard object
+name = f'DQN_logs_{time.time()}'
+summary_writer = tf.summary.create_file_writer(logdir = f'logs/{name}/')
 
 class StockMarket(Env):
     def __init__(self, numStocks, windowSize, start, end, startMoney, buyAmount=1000):
@@ -66,6 +69,8 @@ class StockMarket(Env):
 
         self.window = self.stockData.iloc[:self.observation_shape[1]]
 
+        return self.window
+
     def get_action_meanings(self):
         actionList = ['Hold']
         for ticker in self.tickers:
@@ -99,6 +104,8 @@ class StockMarket(Env):
                 report = f"Sold {ticker} at {round(price, 3)}"
             else:
                 report = f"ERROR: No {ticker} to sell"
+        else:
+            raise ValueError(f"ERROR: Invalid action {action}")
 
         # Increment the step counter
         self.currStep += 1
@@ -173,36 +180,83 @@ class Stock:
         self.data = self.data[mask]
 
 
-class Agent:
-    def __init__(self, numStocks, windowSize):
+class EpsilonGreedyStrategy:
+    def __init__(self, start, end, decay):
+        self.start = start
+        self.end = end
+        self.decay = decay
+
+    def get_exploration_rate(self, current_step):
+        return self.end + (self.start - self.end) * np.exp(-1. * current_step * self.decay)
+
+
+class ReplayMemory:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.memory = []
+        self.push_count = 0
+
+    def push(self, transition):
+        # Push a transition to the memory
+        if len(self.memory) < self.capacity:
+            self.memory.append(transition)
+        else:
+            self.memory[self.push_count % self.capacity] = transition
+        self.push_count += 1
+
+    def sample(self, batch_size):
+        # Sample a batch of transitions from the memory
+        return random.sample(self.memory, batch_size)
+
+    def can_provide_sample(self, batch_size):
+        # Check if the memory contains enough transitions to provide a sample
+        return len(self.memory) >= batch_size
+
+
+class DQN_Agent:
+    def __init__(self, strategy, numStocks, windowSize):
+        self.strategy = strategy
         self.numStocks = numStocks
         self.windowSize = windowSize
         self.numActions = 2 * numStocks + 1 # Buy or sell per stock + hold
+        self.currStep = 0
 
-        self.policyNetwork = self.buildModel()
-        self.targetNetwork = self.buildModel()
+    def select_action(self, state, policy_net):
+        rate = self.strategy.get_exploration_rate(self.currStep)
+        self.currStep += 1
 
-    def buildModel(self):
-        # Builds and LSTM model using the windowSize and numStocks as input and numActions
-        # as output
-        inputLayer  = Input(shape=(self.windowSize, self.numStocks))
-        lstmLayer   = layers.LSTM(32)(inputLayer)
-        denseLayer  = layers.Dense(self.numActions, activation='linear')(lstmLayer)
-        outputLayer = layers.Softmax()(denseLayer)
-        model       = Model(inputs=inputLayer, outputs=outputLayer)
-        model.compile(optimizer='adam', loss='mse')
-        return model
+        if rate > random.random():
+            return random.randrange(self.numActions), rate, True
+        else:
+            return np.argmax(policy_net(np.atleast_2d(np.atleast_2d(state).astype('float32')))), rate, False
 
-    def getAction(self, state):
-        # Returns an action based on the current state
-        return self.policyNetwork.predict(state)
 
-    def updateTargetNetwork(self):
-        # Updates the target network with the weights of the policy network
-        self.targetNetwork.set_weights(self.policyNetwork.get_weights())
+def buildLSTMModel(numStocks, windowSize):
+    # Builds and Functional LSTM model using the windowSize and numStocks as input and numActions
+    # as output
+    numActions = 2 * numStocks + 1
+    inputLayer = layers.Input(shape=(windowSize, numStocks))
+    x = layers.LSTM(windowSize*numStocks, activation='tanh', return_sequences=True)(inputLayer)
+    x = layers.LSTM(windowSize*numStocks, activation='tanh')(x)
+    x = layers.Dense(numActions*4, activation='relu')(x)
+    x = layers.Dense(numActions, activation='relu')(x)
+    x = layers.Flatten()(x)
+    outputLayer = layers.Softmax()(x)
+    model = tf.keras.Model(inputs=inputLayer, outputs=outputLayer)
+    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+    return model
+
+
+def copy_weights(copyFrom, copyTo):
+    variables2 = copyFrom.trainable_variables
+    variables1 = copyTo.trainable_variables
+    for v1, v2 in zip(variables1, variables2):
+        v1.assign(v2.numpy())
 
 
 def main():
+    gamma = 0.99
+    episodesPerNetworkUpdate = 25
     numEpisodes = 10
     # Initialise Environment
     sm = StockMarket(numStocks=5,
@@ -212,23 +266,90 @@ def main():
                      startMoney=10000,
                      buyAmount=1000)
 
-    # Initialise Agent with target and policy networks
-    agent = Agent(numStocks=5, windowSize=10)
+    # Initialise classes
+    strategy = EpsilonGreedyStrategy(start=1, end=0.001, decay=0.001)
+    agent = DQN_Agent(strategy, numStocks=5, windowSize=10)
+    memory = ReplayMemory(capacity=1000000)
 
-    # Initialise replay memory
-    replayMemory = []
+    # Experience Tuple
+    Experience = namedtuple('Experience', ('state', 'action', 'next_state', 'reward'))
+
+    # Initialise Models & copy weights to ensure identical start
+    policyNetwork = buildLSTMModel(numStocks=5, windowSize=10)
+    targetNetwork = buildLSTMModel(numStocks=5, windowSize=10)
+    copy_weights(policyNetwork, targetNetwork)
+
+    # Optimiser
+    optimiser = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+    # Rewards
+    totalRewards = np.empty(numEpisodes)
 
     for episode in range(numEpisodes):
         # Reset the environment
-        sm.reset()
+        state = sm.reset()
+        episodeRewards = 0
+        losses = []
 
         # Run episode
-        while True:
-            action = sm.action_space.sample()
-            state, reward, done, info = sm.step(action)
+        for timestep in itertools.count():
+            action, rate, flag = agent.select_action(state, policyNetwork)
+            nextState, reward, done, _ = sm.step(action)
+
+            # Add rewards
+            episodeRewards += reward
+
+            # Store the experience
+            memory.push(Experience(state, action, nextState, reward))
+            state = nextState
+
+            if memory.can_provide_sample(batch_size=64):
+                experiences = memory.sample(batch_size=64)
+                batch = Experience(*zip(*experiences))
+                states, actions, rewards, next_states, dones = np.asarray(batch[0]), np.asarray(batch[1]), np.asarray(
+                    batch[3]), np.asarray(batch[2]), np.asarray(batch[4])
+
+                # Calculate TD-target
+                q_s_a_prime = np.max(targetNetwork(np.atleast_2d(next_states).astype('float32')), axis=1) # TODO Change to predict
+                q_s_a_target = np.where(dones, rewards, rewards + gamma * q_s_a_prime)
+                q_s_a_target = tf.convert_to_tensor(q_s_a_target, dtype='float32')
+
+                with tf.GradientTape() as tape:
+                    q_s_a = tf.math.reduce_sum(
+                        policyNetwork(np.atleast_2d(states).astype('float32')) * tf.one_hot(actions, sm.action_space.n),
+                        axis=1)
+                    loss = tf.math.reduce_mean(tf.square(q_s_a_target - q_s_a))
+
+                # Update the policy network weights using ADAM optimiser
+                variables = policyNetwork.trainable_variables
+                gradients = tape.gradient(loss, variables)
+                optimiser.apply_gradients(zip(gradients, variables))
+
+                losses.append(loss.numpy())
+            else:
+                losses.append(0)
+
+            # If it is time to update target network
+            if timestep % episodesPerNetworkUpdate == 0:
+                copy_weights(policyNetwork, targetNetwork)
+
+            if done:
+                break
 
             if done == True:
                 break
+
+        totalRewards[episode] = episodeRewards
+        avg_rewards = totalRewards[max(0, episode - 100):(episode + 1)].mean()  # Running average reward of 100 iterations
+
+        # Good old book-keeping
+        with summary_writer.as_default():
+            tf.summary.scalar('Episode_reward', totalRewards[episode], step=episode)
+            tf.summary.scalar('Running_avg_reward', avg_rewards, step=episode)
+            tf.summary.scalar('Losses', mean(losses), step=episode)
+
+        if episode % 1 == 0:
+            print(f"Episode:{episode} Episode_Reward:{totalRewards[episode]} Avg_Reward:{avg_rewards: 0.1f} Losses:{mean(losses): 0.1f} rate:{rate: 0.8f} flag:{flag}")
 
 
 if __name__ == '__main__':
