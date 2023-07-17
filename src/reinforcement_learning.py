@@ -1,4 +1,5 @@
 import time
+import wandb
 import random
 import itertools
 import numpy as np
@@ -14,9 +15,8 @@ import utils
 from config import Config, Interval
 cfg = Config()
 
-# Initialize tensorboard object
-name = f'DQN_logs_{time.time()}'
-summary_writer = tf.summary.create_file_writer(logdir = f'logs/{name}/')
+wandb.login()
+
 
 class StockMarket(Env):
     def __init__(self, numStocks, windowSize, start, end, startMoney, buyAmount=1000):
@@ -55,19 +55,25 @@ class StockMarket(Env):
         # Reset the current step
         self.currStep = 0
 
-        # Choose numStocks random stocks from the dataset
-        validTickers = utils.getValidTickers(Interval.DAY)
-        self.tickers = np.random.choice(validTickers, size=self.observation_shape[0], replace=False)
-        stocks = [Stock(ticker) for ticker in self.tickers]
-        self.holdings = {ticker : 0 for ticker in self.tickers}
+        try:
+            # Choose numStocks random stocks from the dataset
+            validTickers = utils.getValidTickers(Interval.DAY)
+            self.tickers = np.random.choice(validTickers, size=self.observation_shape[0], replace=False)
+            stocks = [Stock(ticker) for ticker in self.tickers]
+            self.holdings = {ticker : 0 for ticker in self.tickers}
 
-        # Slice the ticker frames on the start and end dates then merge them into one dataframe
-        for stock in stocks:
-            stock.slice(self.start, self.end)
+            # Slice the ticker frames on the start and end dates then merge them into one dataframe
+            for stock in stocks:
+                stock.slice(self.start, self.end)
+        except ValueError:
+            return self.reset()
 
         self.stockData = pd.concat([stock.data['Close'] for stock in stocks], axis=1, keys=self.tickers)
-
+        self.stockData.fillna(method='ffill', inplace=True)
         self.window = self.stockData.iloc[:self.observation_shape[1]]
+
+        returns = np.diff(self.stockData, axis=0) / np.array(self.stockData)[:-1,:]
+        self.bestPossibleReturns = np.max(np.hstack([returns, np.zeros((251, 1))]), axis=1)
 
         return self.window
 
@@ -107,13 +113,14 @@ class StockMarket(Env):
         else:
             raise ValueError(f"ERROR: Invalid action {action}")
 
+        # Calculate the reward
+        reward = self.bestPossibleReturns[self.currStep]
+
         # Increment the step counter
         self.currStep += 1
 
         # Get the new state window
         self.window = self.stockData.iloc[self.currStep:self.currStep+self.observation_shape[1]]
-
-        reward = self.money
 
         # Determine if the episode is over
         done = False
@@ -221,14 +228,14 @@ class DQN_Agent:
         self.numActions = 2 * numStocks + 1 # Buy or sell per stock + hold
         self.currStep = 0
 
-    def select_action(self, state, policy_net):
+    def select_action(self, state, policyNet):
         rate = self.strategy.get_exploration_rate(self.currStep)
         self.currStep += 1
 
         if rate > random.random():
             return random.randrange(self.numActions), rate, True
         else:
-            return np.argmax(policy_net(np.atleast_2d(np.atleast_2d(state).astype('float32')))), rate, False
+            return np.argmax(policyNet.predict(np.array([normaliseState(state)]))), rate, False
 
 
 def buildLSTMModel(numStocks, windowSize):
@@ -254,10 +261,21 @@ def copy_weights(copyFrom, copyTo):
         v1.assign(v2.numpy())
 
 
+def normaliseState(state):
+    # Normalise the state to be between 0 and 1
+    return state / np.max(state, axis=0)
+
+
+def normaliseStates(states):
+    for i in range(states.shape[0]):
+        states[i] = normaliseState(states[i])
+    return states
+
+
 def main():
     gamma = 0.99
     episodesPerNetworkUpdate = 25
-    numEpisodes = 10
+    numEpisodes = 50
     # Initialise Environment
     sm = StockMarket(numStocks=5,
                      windowSize=10,
@@ -266,13 +284,21 @@ def main():
                      startMoney=10000,
                      buyAmount=1000)
 
+    run = wandb.init(
+        project="stock-markey-rl",
+        config={
+            "learning_rate": 0.001,
+            "epochs": numEpisodes,
+        })
+
+
     # Initialise classes
     strategy = EpsilonGreedyStrategy(start=1, end=0.001, decay=0.001)
     agent = DQN_Agent(strategy, numStocks=5, windowSize=10)
     memory = ReplayMemory(capacity=1000000)
 
     # Experience Tuple
-    Experience = namedtuple('Experience', ('state', 'action', 'next_state', 'reward'))
+    Experience = namedtuple('Experience', ['states','actions', 'rewards', 'next_states', 'dones'])
 
     # Initialise Models & copy weights to ensure identical start
     policyNetwork = buildLSTMModel(numStocks=5, windowSize=10)
@@ -300,25 +326,25 @@ def main():
             episodeRewards += reward
 
             # Store the experience
-            memory.push(Experience(state, action, nextState, reward))
+            memory.push(Experience(state, action, nextState, reward, done))
             state = nextState
 
             if memory.can_provide_sample(batch_size=64):
                 experiences = memory.sample(batch_size=64)
                 batch = Experience(*zip(*experiences))
-                states, actions, rewards, next_states, dones = np.asarray(batch[0]), np.asarray(batch[1]), np.asarray(
+                states, actions, rewards, nextStates, dones = np.asarray(batch[0]), np.asarray(batch[1]), np.asarray(
                     batch[3]), np.asarray(batch[2]), np.asarray(batch[4])
 
                 # Calculate TD-target
-                q_s_a_prime = np.max(targetNetwork(np.atleast_2d(next_states).astype('float32')), axis=1) # TODO Change to predict
-                q_s_a_target = np.where(dones, rewards, rewards + gamma * q_s_a_prime)
-                q_s_a_target = tf.convert_to_tensor(q_s_a_target, dtype='float32')
+                qsaPrime = np.max(targetNetwork.predict(normaliseStates(nextStates)), axis=1)
+                qsaTarget = np.where(dones, rewards, rewards + gamma * qsaPrime)
+                qsaTarget = tf.convert_to_tensor(qsaTarget, dtype='float32')
 
                 with tf.GradientTape() as tape:
-                    q_s_a = tf.math.reduce_sum(
-                        policyNetwork(np.atleast_2d(states).astype('float32')) * tf.one_hot(actions, sm.action_space.n),
+                    qsa = tf.math.reduce_sum(
+                        policyNetwork(normaliseStates(nextStates)) * tf.one_hot(actions, sm.action_space.n),
                         axis=1)
-                    loss = tf.math.reduce_mean(tf.square(q_s_a_target - q_s_a))
+                    loss = tf.math.reduce_mean(tf.square(qsaTarget - qsa))
 
                 # Update the policy network weights using ADAM optimiser
                 variables = policyNetwork.trainable_variables
@@ -343,10 +369,10 @@ def main():
         avg_rewards = totalRewards[max(0, episode - 100):(episode + 1)].mean()  # Running average reward of 100 iterations
 
         # Good old book-keeping
-        with summary_writer.as_default():
-            tf.summary.scalar('Episode_reward', totalRewards[episode], step=episode)
-            tf.summary.scalar('Running_avg_reward', avg_rewards, step=episode)
-            tf.summary.scalar('Losses', mean(losses), step=episode)
+        wandb.log({"Episode Reward": totalRewards[episode],
+                   "Running Average Reward": avg_rewards,
+                   "Losses": mean(losses)#
+                   })
 
         if episode % 1 == 0:
             print(f"Episode:{episode} Episode_Reward:{totalRewards[episode]} Avg_Reward:{avg_rewards: 0.1f} Losses:{mean(losses): 0.1f} rate:{rate: 0.8f} flag:{flag}")
