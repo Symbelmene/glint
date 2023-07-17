@@ -28,6 +28,48 @@ class Config:
 
         self.RISK_FREE_RATE = 0.0125
 
+        self.REINFORCEMENT_LEARNING = RLConfig()
+        self.STOCK_MARKET           = SMConfig()
+        self.NEURAL_NETWORK         = NNConfig()
+
+
+# REINFORCEMENT MODEL CONFIG #
+class RLConfig:
+    def __init__(self):
+        # RL PARAMATERS #
+        self.GAMMA = 0.99
+        self.NUM_EPISODES   = 50
+        self.STRATEGY_START = 1
+        self.STRATEGY_END   = 0.001
+        self.STRATEGY_DECAY = 0.001
+        self.REPLAY_MEMORY_SIZE = 10000
+        self.EPISODES_PER_NETWORK_UPDATE = 25
+
+
+# STOCK MARKET SIMULATION PARAMETERS #
+class SMConfig:
+    def __init__(self):
+        self.NUM_STOCKS  = 5
+        self.WINDOW_SIZE = 10
+        self.START_DATE  = '2019-01-01'
+        self.END_DATE    = '2020-01-01'
+        self.START_CASH  = 10000
+        self.BUY_AMOUNT  = 1000
+
+
+# NEURAL NETWORK PARAMETERS #
+class NNConfig:
+    def __init__(self):
+        self.BATCH_SIZE = 64
+        self.LEARNING_RATE = 0.001
+
+        self.LSTM_LAYER_1_SIZE  = 64
+        self.LSTM_LAYER_2_SIZE  = 64
+
+        self.DENSE_LAYER_1_SIZE = 32
+
+        self.DROPOUT_RATE = 0.2
+
 
 def parseEnvFile(envPath):
     if not os.path.exists(envPath):
