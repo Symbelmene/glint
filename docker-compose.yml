@@ -1,12 +1,21 @@
 services:
-    glint:
-        image: glint
-        container_name: glint-get
-        volumes:
-            - "${DB_DIR}:/data"
-            - "${DB_DIR}:/logs"
+    scraper:
+        image: scraper
+        container_name: glint-scraper
         build:
             context: ./
             dockerfile: getdata.Dockerfile
         environment:
             - DOCKERCONTAINER=TRUE
+        depends:
+            - storer
+    storer:
+        image: postgres:latest
+        container_name: glint-storer
+        privileged: true
+        command:
+            --port 5432
+networks:
+    glint-network:
+        driver: bridge
+        external: true

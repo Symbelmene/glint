@@ -1,12 +1,11 @@
 import os
-import traceback
+import warnings
 import pandas as pd
 import yfinance as yf
-import warnings
 from multiprocessing.pool import ThreadPool
 warnings.simplefilter("ignore")
 
-from utils import loadRawStockData, log
+from utils import log
 from config import Config, Interval
 cfg = Config()
 
@@ -20,32 +19,16 @@ def getColumnFromCsv(file, col_name):
         return df[col_name]
 
 
-def saveToCsvFromYahoo(ticker, interval):
+def saveToCsvFromYahoo(ticker):
     stock = yf.Ticker(ticker)
-    tickerFormat = ticker.replace(".", "_")
-
-    if interval == Interval.FIVE_MINUTE:
-        tickerPath = f'{cfg.DATA_DIR_5_MINUTE}/{tickerFormat}.csv'
-    elif interval == Interval.DAY:
-        tickerPath = f'{cfg.DATA_DIR_24_HOUR}/{tickerFormat}.csv'
-    else:
-        log(f'Requested interval {interval} not recognised!')
-        raise KeyError
-
-    period = "max" if interval == Interval.DAY else "60d"
     try:
-        if os.path.exists(tickerPath):
-            dfOld = loadRawStockData(tickerFormat, interval)
-            df = stock.history(interval=interval.value, period=period)
-            df = pd.concat([dfOld[df.columns], df]).drop_duplicates()
-        else:
-            df = stock.history(interval=interval.value, period=period)
-            if len(df) < 100:
-                log(f'{ticker.ljust(4)} does not have enough data to be useful!')
-                return False
+        df = stock.history(interval='1d', period="max")
+        if len(df) < 100:
+            log(f'{ticker.ljust(4)} does not have enough data to be useful!')
+            return False
 
-        df.to_csv(tickerPath)
-        log(f'{ticker.ljust(4)} {interval.value} was successfully fetched')
+        # TODO: Send to Postgres container
+        log(f'{ticker.ljust(4)} 1d was successfully fetched')
     except Exception as ex:
         log(f'{ticker.ljust(4)} was unable to be fetched ({ex})')
         return False
@@ -61,7 +44,6 @@ def checkAndCreateDirectories():
 
 def getYahooFinanceIntervalData(ticker):
     saveToCsvFromYahoo(ticker, interval=Interval.DAY)
-    saveToCsvFromYahoo(ticker, interval=Interval.FIVE_MINUTE)
     return True
 
 
@@ -73,29 +55,17 @@ def getFinanceData():
         r = list(tp.imap(getYahooFinanceIntervalData, tickers))
 
 
-def trimRedundantTickers():
-    dfTickers = pd.read_csv(f"../Wilshire-5000-Stocks.csv")
-    tickersToRemove = []
-    for idx, row in dfTickers.iterrows():
-        ticker = row["Ticker"]
-        tickerFormat = ticker.replace(".", "_")
-        df = loadRawStockData(tickerFormat, Interval.DAY)
-        if df is None:
-            log(f'{ticker.ljust(4)} does not have enough data to be useful!')
-            tickersToRemove.append(ticker)
-            continue
-        if len(df) < 100:
-            log(f'{ticker.ljust(4)} does not have enough data to be useful!')
-            os.remove(f'{cfg.DATA_DIR_24_HOUR}/{tickerFormat}.csv')
-            os.remove(f'{cfg.DATA_DIR_5_MINUTE}/{tickerFormat}.csv')
-            tickersToRemove.append(ticker)
-    dfTickers = dfTickers[~dfTickers["Ticker"].isin(tickersToRemove)]
-    dfTickers.to_csv(f"../Wilshire-5000-Stocks.csv", index=False)
+def getTickerInfo(ticker):
+    try:
+        info = yf.Ticker(ticker).info
+        return info
+    except:
+        return None
 
 
 def main():
-    #getFinanceData()
-    trimRedundantTickers()
+    getFinanceData()
+
 
 if __name__ == '__main__':
     main()
