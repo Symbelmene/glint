@@ -7,14 +7,20 @@ services:
             dockerfile: getdata.Dockerfile
         environment:
             - DOCKERCONTAINER=TRUE
-        depends:
+        depends_on:
             - storer
     storer:
         image: postgres:latest
         container_name: glint-storer
         privileged: true
-        command:
-            --port 5432
+        environment:
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=pass
+            - POSTGRES_DB=db
+        ports:
+            - "5432:5432"
+        volumes:
+            - "${POSTGRES_DB_PATH}:/var/lib/postgresql/data"
 networks:
     glint-network:
         driver: bridge
