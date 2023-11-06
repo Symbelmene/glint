@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from multiprocessing import Pool
 from tqdm import tqdm
+import psycopg2 as pg
 
 from config import Config
 cfg = Config()
@@ -11,23 +12,22 @@ def createTables(db):
     cursor = db.cursor()
     # Create empty database tables
     # SECTOR TABLE - sector_id, sector
-    cursor.execute("CREATE TABLE sectors ("
-                   "sector_id INT AUTO_INCREMENT PRIMARY KEY, "
-                   "sector VARCHAR(255))")
-
+    cursor.execute("""
+                    CREATE TABLE sectors (
+                    sector_id SERIAL PRIMARY KEY,
+                    sector VARCHAR(255))
+                    """)
     # TICKER TABLE - ticker_id, sector_id, ticker
-    cursor.execute("CREATE TABLE tickers (ticker_id INT AUTO_INCREMENT PRIMARY KEY,"
+    cursor.execute("CREATE TABLE tickers ("
+                   "ticker_id SERIAL PRIMARY KEY,"
                    "sector_id INT, "
                    "ticker VARCHAR(255),"
                    "FOREIGN KEY (sector_id) REFERENCES sectors(sector_id))")
 
     # STOCK DATA TABLES - ticker_id, date, open, high, low, close, volume
     cursor.execute("CREATE TABLE stock_data_day (ticker_id INT, date DATE, open FLOAT, high FLOAT, low FLOAT, "
-                     "close FLOAT, volume BIGINT UNSIGNED, FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id))")
+                     "close FLOAT, volume BIGINT, FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id))")
 
-    # STOCK DATA TABLES - ticker_id, date, open, high, low, close, volume
-    cursor.execute("CREATE TABLE stock_data_5min (ticker_id INT, date DATETIME, open FLOAT, high FLOAT, low FLOAT, "
-                   "close FLOAT, volume BIGINT UNSIGNED, FOREIGN KEY (ticker_id) REFERENCES tickers(ticker_id))")
     db.commit()
 
 
@@ -81,6 +81,7 @@ def addTickerDataToDatabaseDay(mydb, path):
                           f"VALUES (%s, %s, %s, %s, %s, %s, %s)", values)
     mydb.commit()
 
+
 def addTickerDataToDatabase5Min(mydb, path):
     df, ticker = parseTickerDataFromFile(path)
     cursor = mydb.cursor()
@@ -113,10 +114,10 @@ def logErrorMessage(ticker, ex):
 
 
 def main():
-    mydb = mysql.connector.connect(
+    mydb = pg.connect(
         host="localhost",
         user="user",
-        password="password",
+        password="pass",
         database="findata"
     )
 
@@ -134,14 +135,6 @@ def main():
     for tickerFile in tqdm(os.listdir(cfg.DATA_DIR_24_HOUR)):
         try:
             addTickerDataToDatabaseDay(mydb, f'{cfg.DATA_DIR_24_HOUR}/{tickerFile}')
-        except Exception as ex:
-            print(f'ERROR: {tickerFile} failed to load ({ex})')
-            logErrorMessage(tickerFile, ex)
-
-    # Add ticker data to database
-    for tickerFile in tqdm(os.listdir(cfg.DATA_DIR_5_MINUTE)):
-        try:
-            addTickerDataToDatabase5Min(mydb, f'{cfg.DATA_DIR_5_MINUTE}/{tickerFile}')
         except Exception as ex:
             print(f'ERROR: {tickerFile} failed to load ({ex})')
             logErrorMessage(tickerFile, ex)

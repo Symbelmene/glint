@@ -7,7 +7,7 @@ services:
             dockerfile: getdata.Dockerfile
         environment:
             - DOCKERCONTAINER=TRUE
-        depends:
+        depends_on:
             - storer
     storer:
         image: postgres:latest

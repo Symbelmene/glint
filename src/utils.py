@@ -1,23 +1,9 @@
 import os
-import math
-import numpy as np
-import pandas as pd
-import plotly.express as px
-
 import warnings
 warnings.simplefilter("ignore")
 
-from tqdm import tqdm
-from tabulate import tabulate
-from plotly import graph_objects as go
-from multiprocessing import Pool
 from datetime import datetime
-from finclasses import addBaseIndicatorsToDf
-
-import utils
-import finclasses
-
-from config import Config, Interval
+from config import Config
 cfg = Config()
 
 
