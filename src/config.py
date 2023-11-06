@@ -1,9 +1,4 @@
 import os
-from enum import Enum
-
-class Interval(Enum):
-    DAY         = "1d"
-    FIVE_MINUTE = "5m"
 
 
 class Config:

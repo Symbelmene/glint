@@ -6,7 +6,7 @@ from multiprocessing.pool import ThreadPool
 warnings.simplefilter("ignore")
 
 from utils import log
-from config import Config, Interval
+from config import Config
 cfg = Config()
 
 
@@ -43,7 +43,7 @@ def checkAndCreateDirectories():
 
 
 def getYahooFinanceIntervalData(ticker):
-    saveToCsvFromYahoo(ticker, interval=Interval.DAY)
+    saveToCsvFromYahoo(ticker)
     return True
 
 
