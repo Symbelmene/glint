@@ -7,7 +7,7 @@ class PGConn:
         self.conn = pg.connect(dbname='findata',
                                user='user',
                                password='pass',
-                               host='localhost',
+                               host='0.0.0.0',
                                port='5432')
 
         # Check if sector and ticker tables exist and create them if they don't
