@@ -5,6 +5,9 @@ WORKDIR /app
 
 RUN apt-get update
 
+RUN apt-get install libpq-dev python-dev -y
+RUN apt-get install gcc -y
+
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
