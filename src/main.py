@@ -11,10 +11,11 @@ def render_home_page():
 
 @app.route('/update', methods=['POST'])
 def update_data():
+    gtd.update_sector_tickers('Information Technology')
     response_data = {'status': 'success', 'message': 'Data updated successfully'}
-    gtd.download_tickers()
+    gtd.update_sector_tickers('Information Technology')
     return jsonify(response_data)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    gtd.update_sector_tickers('Information Technology')
