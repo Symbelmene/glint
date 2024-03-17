@@ -65,7 +65,7 @@ def update_sector_tickers(sector_name):
 
     # Download tickers data
     print("Downloading data...")
-    ticker_data = yf.download(tickers, start=start_date)
+    ticker_data = yf.download(tickers[:20], start=start_date)
     ticker_groups = ticker_data.T.groupby(level=1)
 
     # Create a database connection
