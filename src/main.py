@@ -12,7 +12,7 @@ def render_home_page():
 @app.route('/update', methods=['POST'])
 def update_data():
     response_data = {'status': 'success', 'message': 'Data updated successfully'}
-    gtd.download_tickers()
+    gtd.update_sector_tickers()
     return jsonify(response_data)
 
 
