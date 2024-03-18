@@ -1,8 +1,8 @@
 import yfinance as yf
-import pandas as pd
 from datetime import datetime as dt
 
 from connectors import PGConn
+from debug import log_message
 
 
 def download_data(tickers, start_date, end_date):
@@ -19,25 +19,6 @@ def check_existing_data(ticker, connection, now):
             return True, None
         else:
             return False, max_date
-
-
-def update_database(ticker, data, connection):
-    insert_query = f"INSERT INTO stock_data (date, ticker, open, high, low, close, adj_close, volume) " \
-                   f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    inserts = [(row.name.date(),
-                ticker,
-                row['Open'],
-                row['High'],
-                row['Low'],
-                row['Close'],
-                row['Adj Close'],
-                int(row['Volume'])) for idx, row in data.iterrows()]
-
-    with connection.cursor() as cursor:
-        cursor.executemany(insert_query, inserts)
-
-    # Commit the changes to the database
-    connection.commit()
 
 
 def update_sector_tickers(sector_name):
@@ -57,20 +38,19 @@ def update_sector_tickers(sector_name):
         if up_to_date:
             tickers.remove(ticker)
 
-
     # Check current state of database and get tickers to update
     # TODO: Try to get missing_tickers and if unable then remove from ticker list
     # TODO: Get missing ticker data by specifying start and end date
     # TODO: Ensure duplicate date entries are not posted to database
 
     # Download tickers data
-    print("Downloading data...")
-    ticker_data = yf.download(tickers[:20], start=start_date)
+    log_message("Downloading data...")
+    ticker_data = yf.download(tickers, start=start_date)
     ticker_groups = ticker_data.T.groupby(level=1)
 
     # Create a database connection
     for ticker, group in ticker_groups:
-        print(f'Updating data for {ticker}')
+        log_message(f'Updating data for {ticker}')
         df_ticker = group.T
         df_ticker.columns = df_ticker.columns.droplevel(1)
         df_ticker = df_ticker[df_ticker.notna().all(axis=1)]

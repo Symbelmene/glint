@@ -1,14 +1,18 @@
 import pandas as pd
 import psycopg2 as pg
 
+from debug import log_message
+from config import Config
+cfg = Config()
+
 
 class PGConn:
     def __init__(self):
-        self.conn = pg.connect(dbname='findata',
-                               user='user',
-                               password='pass',
-                               host='0.0.0.0',
-                               port='5432')
+        self.conn = pg.connect(dbname=cfg.STORER_DB_NAME,
+                               user=cfg.STORER_USER,
+                               password=cfg.STORER_PASSWORD,
+                               host=cfg.STORER_HOST,
+                               port=cfg.STORER_PORT)
 
         # Check if sector and ticker tables exist and create them if they don't
         self.populate_initial_tables()
@@ -21,7 +25,7 @@ class PGConn:
 
     def get_tickers_for_sector(self, sector_name):
         with self.conn.cursor() as cursor:
-            cursor.execute("SELECT t.ticker FROM tickers t JOIN sectors s ON t.sector_id = s.id WHERE s.sector = %s",
+            cursor.execute("SELECT t.id, t.ticker FROM tickers t JOIN sectors s ON t.sector_id = s.id WHERE s.sector = %s",
                            (sector_name,))
             return [row[0] for row in cursor.fetchall()]
 
@@ -61,7 +65,7 @@ def populate_base_tables(conn):
             sector_dict[sector] = sector_id
             conn.commit()
 
-    print("Sectors table populated successfully")
+    log_message("Sectors table populated successfully")
 
     # Populate ticker table
     with conn.cursor() as cursor:
@@ -74,7 +78,7 @@ def populate_base_tables(conn):
             cursor.execute("INSERT INTO tickers (ticker, sector_id) VALUES (%s, %s)", (ticker, sector_id,))
             conn.commit()
 
-    print("Ticker table populated successfully")
+    log_message("Ticker table populated successfully")
 
 
 def create_stock_data_table(conn):
@@ -86,7 +90,7 @@ def create_stock_data_table(conn):
                        "high NUMERIC, low NUMERIC, close NUMERIC, adj_close NUMERIC, volume BIGINT)")
         conn.commit()
 
-    print("Stock data table created successfully")
+    log_message("Stock data table created successfully")
 
 
 def check_if_table_exists(conn, table_name):
