@@ -9,14 +9,17 @@ cfg = Config()
 class PGConn:
     def __init__(self):
         self.conn = pg.connect(dbname='postgres',
-                               user=cfg.STORER_USER,
-                               password=cfg.STORER_PASSWORD,
-                               host=cfg.STORER_HOST,
-                               port=cfg.STORER_PORT)
+                               user=cfg.STORER_USER, password=cfg.STORER_PASSWORD,
+                               host=cfg.STORER_HOST, port=cfg.STORER_PORT)
 
         # Check if findata database exists and create it if it doesn't
         if not self.check_database_exists(cfg.STORER_DB_NAME):
             self.create_database(cfg.STORER_DB_NAME)
+        self.conn.close()
+
+        self.conn = pg.connect(dbname=cfg.STORER_DB_NAME,
+                               user=cfg.STORER_USER, password=cfg.STORER_PASSWORD,
+                               host=cfg.STORER_HOST, port=cfg.STORER_PORT)
 
         # Check if sector and ticker tables exist and create them if they don't
         self.populate_initial_tables()
