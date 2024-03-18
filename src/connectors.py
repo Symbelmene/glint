@@ -30,8 +30,9 @@ class PGConn:
 
     def create_database(self, db_name):
         with self.conn.cursor() as cursor:
+            self.conn.autocommit = True
             cursor.execute(f"CREATE DATABASE {db_name}")
-            self.conn.commit()
+            self.conn.autocommit = False
 
     def populate_initial_tables(self):
         populate_base_tables(self.conn)
