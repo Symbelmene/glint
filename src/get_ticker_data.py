@@ -10,15 +10,22 @@ def download_data(tickers, start_date, end_date):
     return data
 
 
-def check_existing_data(ticker, connection, now):
-    query = f"SELECT MAX(date) FROM stock_data WHERE ticker = '{ticker}'"
-    with connection.cursor() as cursor:
-        cursor.execute(query)
-        max_date = cursor.fetchone()[0]
-        if max_date == now:
-            return True, None
-        else:
-            return False, max_date
+def download_ticker_data(pg_conn, start_date, tickers):
+    # Download tickers data
+    log_message("Downloading data...")
+    ticker_data = yf.download(tickers, start=start_date)
+    ticker_groups = ticker_data.T.groupby(level=1)
+    # Create a database connection
+    for ticker, group in ticker_groups:
+        log_message(f'Updating data for {ticker}')
+        df_ticker = group.T
+        df_ticker.columns = df_ticker.columns.droplevel(1)
+        df_ticker = df_ticker[df_ticker.notna().all(axis=1)]
+        if df_ticker.empty:
+            continue
+
+        # Check if data for the ticker already exists in the database
+        pg_conn.insert_stock_data(ticker, df_ticker)
 
 
 def update_sector_tickers(sector_name):
@@ -31,34 +38,12 @@ def update_sector_tickers(sector_name):
     # Get list of tickers for the sector
     tickers = pg_conn.get_tickers_for_sector(sector_name)
 
-    # Check if data already exists for tickers and find out most recent date
-    now = dt.now().date()
-    for ticker in tickers:
-        up_to_date, most_recent_date = check_existing_data(ticker, pg_conn.conn, now)
-        if up_to_date:
-            tickers.remove(ticker)
-
     # Check current state of database and get tickers to update
     # TODO: Try to get missing_tickers and if unable then remove from ticker list
     # TODO: Get missing ticker data by specifying start and end date
     # TODO: Ensure duplicate date entries are not posted to database
 
-    # Download tickers data
-    log_message("Downloading data...")
-    ticker_data = yf.download(tickers, start=start_date)
-    ticker_groups = ticker_data.T.groupby(level=1)
-
-    # Create a database connection
-    for ticker, group in ticker_groups:
-        log_message(f'Updating data for {ticker}')
-        df_ticker = group.T
-        df_ticker.columns = df_ticker.columns.droplevel(1)
-        df_ticker = df_ticker[df_ticker.notna().all(axis=1)]
-        if df_ticker.empty:
-            continue
-
-        # Check if data for the ticker already exists in the database
-        pg_conn.insert_stock_data(ticker, df_ticker)
+    download_ticker_data(pg_conn, start_date, tickers)
 
 
 def main():
