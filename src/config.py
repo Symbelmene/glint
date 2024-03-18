@@ -8,7 +8,7 @@ class Config:
         self.env = parseEnvFile('../.env')
 
         # Postgres details
-        self.STORER_DB_NAME  = self.env['STORER_DB_NAME']
+        self.STORER_DB_NAME  = self.env['STORER_NAME']
         self.STORER_HOST     = self.env['STORER_HOST']
         self.STORER_PORT     = self.env['STORER_PORT']
         self.STORER_USER     = self.env['STORER_USER']
