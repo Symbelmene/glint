@@ -32,6 +32,7 @@ class PGConn:
             return cursor.fetchone()
 
     def create_database(self, db_name):
+        self.conn.rollback()
         self.conn.autocommit = True
         with self.conn.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE {db_name}")
