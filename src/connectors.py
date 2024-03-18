@@ -8,16 +8,30 @@ cfg = Config()
 
 class PGConn:
     def __init__(self):
-        self.conn = pg.connect(dbname=cfg.STORER_DB_NAME,
+        self.conn = pg.connect(dbname='postgres',
                                user=cfg.STORER_USER,
                                password=cfg.STORER_PASSWORD,
                                host=cfg.STORER_HOST,
                                port=cfg.STORER_PORT)
 
+        # Check if findata database exists and create it if it doesn't
+        if not self.check_database_exists(cfg.STORER_DB_NAME):
+            self.create_database(cfg.STORER_DB_NAME)
+
         # Check if sector and ticker tables exist and create them if they don't
         self.populate_initial_tables()
 
         # Create empty stock data table if it doesn't exist
+
+    def check_database_exists(self, db_name):
+        with self.conn.cursor() as cursor:
+            cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
+            return cursor.fetchone()
+
+    def create_database(self, db_name):
+        with self.conn.cursor() as cursor:
+            cursor.execute(f"CREATE DATABASE {db_name}")
+            self.conn.commit()
 
     def populate_initial_tables(self):
         populate_base_tables(self.conn)
