@@ -38,7 +38,7 @@ def update_sector_tickers(sector_name):
     # TODO: Get missing ticker data by specifying start and end date
     # TODO: Ensure duplicate date entries are not posted to database
 
-    download_ticker_data(pg_conn, tickers[:10])
+    download_ticker_data(pg_conn, tickers)
 
 
 def main():

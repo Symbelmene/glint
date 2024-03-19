@@ -102,7 +102,7 @@ def create_stock_data_table(conn):
         return True
 
     with conn.cursor() as cursor:
-        cursor.execute("CREATE TABLE stock_data (id SERIAL PRIMARY KEY, date DATETIME, ticker VARCHAR(10), open NUMERIC, "
+        cursor.execute("CREATE TABLE stock_data (id SERIAL PRIMARY KEY, date TIMESTAMP, ticker VARCHAR(10), open NUMERIC, "
                        "high NUMERIC, low NUMERIC, close NUMERIC, adj_close NUMERIC, volume BIGINT)")
         conn.commit()
 
