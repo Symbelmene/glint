@@ -46,7 +46,7 @@ class PGConn:
         with self.conn.cursor() as cursor:
             cursor.execute("SELECT t.id, t.ticker FROM tickers t JOIN sectors s ON t.sector_id = s.id WHERE s.sector = %s",
                            (sector_name,))
-            return [row[0] for row in cursor.fetchall()]
+            return [row[1] for row in cursor.fetchall()]
 
     def insert_stock_data(self, ticker, data):
         insert_query = f"INSERT INTO stock_data (date, ticker, open, high, low, close, adj_close, volume) " \
@@ -60,9 +60,6 @@ class PGConn:
 
         # Commit the changes to the database
         self.conn.commit()
-
-    def __del__(self):
-        self.conn.close()
 
 
 def populate_base_tables(conn):
@@ -120,4 +117,3 @@ def check_if_table_exists(conn, table_name):
 
 if __name__ == '__main__':
     pg_conn = PGConn()
-    pg_conn.populate_ticker_table()

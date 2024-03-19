@@ -5,11 +5,6 @@ from connectors import PGConn
 from debug import log_message
 
 
-def download_data(tickers, start_date, end_date):
-    data = yf.download(tickers, start=start_date, end=end_date)
-    return data
-
-
 def download_ticker_data(pg_conn, start_date, tickers):
     # Download tickers data
     log_message("Downloading data...")
