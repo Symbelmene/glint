@@ -5,10 +5,10 @@ from connectors import PGConn
 from debug import log_message
 
 
-def download_ticker_data(pg_conn, start_date, tickers):
+def download_ticker_data(pg_conn, tickers):
     # Download tickers data
     log_message("Downloading data...")
-    ticker_data = yf.download(tickers, start=start_date)
+    ticker_data = yf.download(tickers, interval='1h')
     ticker_groups = ticker_data.T.groupby(level=1)
     # Create a database connection
     for ticker, group in ticker_groups:
@@ -38,7 +38,7 @@ def update_sector_tickers(sector_name):
     # TODO: Get missing ticker data by specifying start and end date
     # TODO: Ensure duplicate date entries are not posted to database
 
-    download_ticker_data(pg_conn, start_date, tickers)
+    download_ticker_data(pg_conn, tickers[:10])
 
 
 def main():
