@@ -8,7 +8,7 @@ from debug import log_message
 def download_ticker_data(pg_conn, tickers):
     # Download tickers data
     log_message("Downloading data...")
-    ticker_data = yf.download(tickers, interval='1h')
+    ticker_data = yf.download(tickers, interval='1h', period='2y')
     ticker_groups = ticker_data.T.groupby(level=1)
     # Create a database connection
     for ticker, group in ticker_groups:
