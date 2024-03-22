@@ -1,5 +1,4 @@
 import yfinance as yf
-from datetime import datetime as dt
 
 from connectors import PGConn
 from debug import log_message
@@ -26,9 +25,6 @@ def download_ticker_data(pg_conn, tickers):
 def update_sector_tickers(sector_name):
     # Database connection parameters
     pg_conn = PGConn()
-
-    # Date range for data download
-    start_date = '2000-01-01'
 
     # Get list of tickers for the sector
     tickers = pg_conn.get_tickers_for_sector(sector_name)
