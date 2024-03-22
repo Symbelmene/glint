@@ -51,7 +51,7 @@ class PGConn:
     def insert_stock_data(self, ticker, data):
         insert_query = f"INSERT INTO stock_data (date, ticker, open, high, low, close, adj_close, volume) " \
                        f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        inserts = [(row.name.date(), ticker, row['Open'], row['High'],
+        inserts = [(pd.to_datetime(row.name), ticker, row['Open'], row['High'],
                     row['Low'], row['Close'], row['Adj Close'], int(row['Volume']))
                    for idx, row in data.iterrows()]
 
@@ -102,7 +102,7 @@ def create_stock_data_table(conn):
         return True
 
     with conn.cursor() as cursor:
-        cursor.execute("CREATE TABLE stock_data (id SERIAL PRIMARY KEY, date DATE, ticker VARCHAR(10), open NUMERIC, "
+        cursor.execute("CREATE TABLE stock_data (id SERIAL PRIMARY KEY, date TIMESTAMP, ticker VARCHAR(10), open NUMERIC, "
                        "high NUMERIC, low NUMERIC, close NUMERIC, adj_close NUMERIC, volume BIGINT)")
         conn.commit()
 
