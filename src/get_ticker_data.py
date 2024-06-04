@@ -1,11 +1,15 @@
+import time
+import pandas as pd
 import yfinance as yf
-from datetime import datetime as dt
 
 from connectors import PGConn
 from debug import log_message
 
+from config import Config
+cfg = Config()
 
-def download_ticker_data(pg_conn, tickers):
+
+def download_initial_ticker_data(pg_conn, tickers):
     # Download tickers data
     log_message("Downloading data...")
     ticker_data = yf.download(tickers, interval='1h', period='3mo')
@@ -26,7 +30,6 @@ def download_ticker_data(pg_conn, tickers):
 def update_sector_tickers(sector_name, conn):
     # Get list of tickers for the sector
     tickers = conn.get_tickers_for_sector(sector_name)
-
     download_ticker_data(conn, tickers)
 
 
