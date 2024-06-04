@@ -12,11 +12,7 @@ cfg = Config()
 def download_initial_ticker_data(pg_conn, tickers):
     # Download tickers data
     log_message("Downloading data...")
-    ticker_data = yf.download(tickers, interval='1h', period='2y')
-    insert_tickers_into_db(pg_conn, ticker_data)
-
-
-def insert_tickers_into_db(pg_conn, ticker_data):
+    ticker_data = yf.download(tickers, interval='1h', period='3mo')
     ticker_groups = ticker_data.T.groupby(level=1)
     # Create a database connection
     for ticker, group in ticker_groups:
@@ -31,48 +27,22 @@ def insert_tickers_into_db(pg_conn, ticker_data):
         pg_conn.insert_stock_data(ticker, df_ticker)
 
 
-def get_initial_stock_data(sector_name):
-    # Database connection parameters
-    pg_conn = PGConn()
-
+def update_sector_tickers(sector_name, conn):
     # Get list of tickers for the sector
-    tickers = pg_conn.get_tickers_for_sector(sector_name)
-
-    # Check current state of database and get tickers to update
-    download_initial_ticker_data(pg_conn, tickers)
+    tickers = conn.get_tickers_for_sector(sector_name)
+    download_ticker_data(conn, tickers)
 
 
-def update_stock_data():
-    # Checks most recent fetch for each ticker and updates the database
+def update_all_sectors():
     pg_conn = PGConn()
-
-    tickers = pg_conn.get_distinct_tickers_in_db()
-
-    # Most recent date in database
-    query = "SELECT MAX(date) FROM stock_data"
-    with pg_conn.conn.cursor() as cursor:
-        cursor.execute(query)
-        last_date = cursor.fetchone()[0]
-
-    # Download data from last_date to now
-    log_message("Downloading data...")
-    ticker_data = yf.download(tickers, interval='1h', start=last_date)
-
-    date_mask = pd.to_datetime(ticker_data.index).map(lambda i: i.replace(tzinfo=None)) > last_date
-
-    ticker_data = ticker_data[date_mask]
-
-    insert_tickers_into_db(pg_conn, ticker_data)
+    sector_list = pg_conn.get_sectors()
+    for sector in sector_list:
+        update_sector_tickers(sector, pg_conn)
 
 
 def main():
-    get_initial_stock_data('Information Technology')
-
-    last_updated = time.time()
-    while True:
-        if time.time() - last_updated > cfg.UPDATE_RATE_DAYS * 86400:
-            update_stock_data()
-            last_updated = time.time()
+    update_all_sectors()
+    #update_sector_tickers('Information Technology', pg_conn)
 
 
 if __name__ == "__main__":
