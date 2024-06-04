@@ -8,7 +8,7 @@ from debug import log_message
 def download_ticker_data(pg_conn, tickers):
     # Download tickers data
     log_message("Downloading data...")
-    ticker_data = yf.download(tickers, interval='1h', period='2y')
+    ticker_data = yf.download(tickers, interval='1h', period='3mo')
     ticker_groups = ticker_data.T.groupby(level=1)
     # Create a database connection
     for ticker, group in ticker_groups:
@@ -23,26 +23,23 @@ def download_ticker_data(pg_conn, tickers):
         pg_conn.insert_stock_data(ticker, df_ticker)
 
 
-def update_sector_tickers(sector_name):
-    # Database connection parameters
-    pg_conn = PGConn()
-
-    # Date range for data download
-    start_date = '2000-01-01'
-
+def update_sector_tickers(sector_name, conn):
     # Get list of tickers for the sector
-    tickers = pg_conn.get_tickers_for_sector(sector_name)
+    tickers = conn.get_tickers_for_sector(sector_name)
 
-    # Check current state of database and get tickers to update
-    # TODO: Try to get missing_tickers and if unable then remove from ticker list
-    # TODO: Get missing ticker data by specifying start and end date
-    # TODO: Ensure duplicate date entries are not posted to database
+    download_ticker_data(conn, tickers)
 
-    download_ticker_data(pg_conn, tickers)
+
+def update_all_sectors():
+    pg_conn = PGConn()
+    sector_list = pg_conn.get_sectors()
+    for sector in sector_list:
+        update_sector_tickers(sector, pg_conn)
 
 
 def main():
-    update_sector_tickers('Information Technology')
+    update_all_sectors()
+    #update_sector_tickers('Information Technology', pg_conn)
 
 
 if __name__ == "__main__":

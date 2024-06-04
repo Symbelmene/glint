@@ -48,9 +48,28 @@ class PGConn:
                            (sector_name,))
             return [row[1] for row in cursor.fetchall()]
 
-    def insert_stock_data(self, ticker, data):
+    def get_sectors(self):
+        with self.conn.cursor() as cursor:
+            cursor.execute("SELECT sector FROM sectors")
+            return [row[0] for row in cursor.fetchall()]
+
+    def insert_stock_data(self, ticker, data, remove_duplicate=True):
+        if remove_duplicate:
+            # Fetch the latest date in the database
+            with self.conn.cursor() as cursor:
+                cursor.execute("SELECT MAX(date) FROM stock_data WHERE ticker = %s", (ticker,))
+                latest_date = cursor.fetchone()[0]
+
+            if latest_date is not None:
+                mask = pd.to_datetime(data.index).tz_localize(None)
+                data = data[mask > latest_date]
+
+        if data.empty:
+            return
+
         insert_query = f"INSERT INTO stock_data (date, ticker, open, high, low, close, adj_close, volume) " \
                        f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+
         inserts = [(pd.to_datetime(row.name), ticker, row['Open'], row['High'],
                     row['Low'], row['Close'], row['Adj Close'], int(row['Volume']))
                    for idx, row in data.iterrows()]
