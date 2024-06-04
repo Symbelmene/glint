@@ -15,10 +15,8 @@ class PGConn:
         # Check if findata database exists and create it if it doesn't
         if not self.check_database_exists(cfg.STORER_DB_NAME):
             self.create_database(cfg.STORER_DB_NAME)
-
         self.conn.close()
 
-        # Switch to the findata database
         self.conn = pg.connect(dbname=cfg.STORER_DB_NAME,
                                user=cfg.STORER_USER, password=cfg.STORER_PASSWORD,
                                host=cfg.STORER_HOST, port=cfg.STORER_PORT)
@@ -26,6 +24,7 @@ class PGConn:
         # Check if sector and ticker tables exist and create them if they don't
         self.populate_initial_tables()
 
+        # Create empty stock data table if it doesn't exist
 
     def check_database_exists(self, db_name):
         with self.conn.cursor() as cursor:
@@ -49,25 +48,7 @@ class PGConn:
                            (sector_name,))
             return [row[1] for row in cursor.fetchall()]
 
-    def get_sectors(self):
-        with self.conn.cursor() as cursor:
-            cursor.execute("SELECT sector FROM sectors")
-            return [row[0] for row in cursor.fetchall()]
-
-    def insert_stock_data(self, ticker, data, remove_duplicate=True):
-        if remove_duplicate:
-            # Fetch the latest date in the database
-            with self.conn.cursor() as cursor:
-                cursor.execute("SELECT MAX(date) FROM stock_data WHERE ticker = %s", (ticker,))
-                latest_date = cursor.fetchone()[0]
-
-            if latest_date is not None:
-                mask = pd.to_datetime(data.index).tz_localize(None)
-                data = data[mask > latest_date]
-
-        if data.empty:
-            return
-
+    def insert_stock_data(self, ticker, data):
         insert_query = f"INSERT INTO stock_data (date, ticker, open, high, low, close, adj_close, volume) " \
                        f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
 
@@ -80,12 +61,6 @@ class PGConn:
 
         # Commit the changes to the database
         self.conn.commit()
-
-    def check_database_is_empty(self):
-        # Check if any rows exist in the stock_data table
-        with self.conn.cursor() as cursor:
-            cursor.execute("SELECT EXISTS (SELECT 1 FROM stock_data)")
-            return not cursor.fetchone()[0]
 
 
 def populate_base_tables(conn):

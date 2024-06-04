@@ -7,8 +7,6 @@ class Config:
         self.docker = True if 'DOCKERCONTAINER' in os.environ else False
         self.env = parseEnvFile('../.env')
 
-        self.UPDATE_RATE_DAYS = int(self.env['UPDATE_RATE_DAYS'])
-
         # Postgres details
         self.STORER_DB_NAME  = self.env['STORER_NAME']
         self.STORER_HOST     = self.env['STORER_HOST']
