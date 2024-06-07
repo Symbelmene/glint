@@ -23,9 +23,33 @@ def download_ticker_data(pg_conn, tickers):
         pg_conn.insert_stock_data(ticker, df_ticker)
 
 
+def get_date_groups(pg_conn, max_groups=3):
+    recent_ticker_data = pg_conn.get_most_recent_date_by_ticker(as_dataframe=True)
+    date_groups = recent_ticker_data.groupby('date')
+
+    date_group_list = [(name, list(group['ticker'])) for name, group in date_groups]
+
+    # Sort by length of group
+    date_group_list.sort(key=lambda x: len(x[1]), reverse=True)
+
+    condensed_group_list = []
+    for i in range(max_groups - 1):
+        condensed_group_list.append(date_group_list[i])
+
+    # Get the remaining tickers
+    remaining_groups = [ticker_group for date_label, ticker_group in date_group_list[max_groups - 1:]]
+    remaining_groups = [ticker for ticker_group in remaining_groups for ticker in ticker_group]
+
+    condensed_group_list.append(('Remaining', remaining_groups))
+
+    return condensed_group_list
+
+
 def update_sector_tickers(sector_name):
     # Database connection parameters
     pg_conn = PGConn()
+
+    #date_groups = get_date_groups(pg_conn)
 
     # Get list of tickers for the sector
     tickers = pg_conn.get_tickers_for_sector(sector_name)

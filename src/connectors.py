@@ -62,6 +62,19 @@ class PGConn:
         # Commit the changes to the database
         self.conn.commit()
 
+    def get_most_recent_date_by_ticker(self, as_dataframe=False):
+        query = """SELECT DISTINCT ON (ticker) date, ticker FROM stock_data ORDER BY ticker, date DESC"""
+
+        with self.conn.cursor() as cursor:
+            cursor.execute(query)
+            data = cursor.fetchall()
+
+        if as_dataframe:
+            headers = [desc.name for desc in cursor.description]
+            return pd.DataFrame(data, columns=headers)
+
+        return data
+
 
 def populate_base_tables(conn):
     df = pd.read_csv('../stocks.csv')
