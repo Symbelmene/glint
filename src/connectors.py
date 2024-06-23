@@ -40,7 +40,13 @@ class PGConn:
 
     def populate_initial_tables(self):
         populate_base_tables(self.conn)
-        create_stock_data_table(self.conn)
+        create_stock_data_table_day(self.conn)
+        create_stock_data_table_hour(self.conn)
+
+    def get_ticker_id(self, ticker):
+        with self.conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM tickers WHERE ticker = %s", (ticker,))
+            return cursor.fetchone()[0]
 
     def get_tickers_for_sector(self, sector_name):
         with self.conn.cursor() as cursor:
@@ -48,11 +54,29 @@ class PGConn:
                            (sector_name,))
             return [row[1] for row in cursor.fetchall()]
 
-    def insert_stock_data(self, ticker, data):
-        insert_query = f"INSERT INTO stock_data (date, ticker, open, high, low, close, adj_close, volume) " \
+    def insert_stock_day_data(self, ticker, data):
+        ticker_id = self.get_ticker_id(ticker)
+
+        insert_query = f"INSERT INTO stock_data_day (date, ticker_id, open, high, low, close, adj_close, volume) " \
                        f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
 
-        inserts = [(pd.to_datetime(row.name), ticker, row['Open'], row['High'],
+        inserts = [(pd.to_datetime(row.name), ticker_id, row['Open'], row['High'],
+                    row['Low'], row['Close'], row['Adj Close'], int(row['Volume']))
+                   for idx, row in data.iterrows()]
+
+        with self.conn.cursor() as cursor:
+            cursor.executemany(insert_query, inserts)
+
+        # Commit the changes to the database
+        self.conn.commit()
+
+    def insert_stock_hour_data(self, ticker, data):
+        ticker_id = self.get_ticker_id(ticker)
+
+        insert_query = f"INSERT INTO stock_data_hour (date, ticker_id, open, high, low, close, adj_close, volume) " \
+                       f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+
+        inserts = [(pd.to_datetime(row.name), ticker_id, row['Open'], row['High'],
                     row['Low'], row['Close'], row['Adj Close'], int(row['Volume']))
                    for idx, row in data.iterrows()]
 
@@ -111,16 +135,28 @@ def populate_base_tables(conn):
     log_message("Ticker table populated successfully")
 
 
-def create_stock_data_table(conn):
-    if check_if_table_exists(conn, 'stock_data'):
+def create_stock_data_table_day(conn):
+    if check_if_table_exists(conn, 'stock_data_day'):
         return True
 
     with conn.cursor() as cursor:
-        cursor.execute("CREATE TABLE stock_data (id SERIAL PRIMARY KEY, date TIMESTAMP, ticker VARCHAR(10), open NUMERIC, "
+        cursor.execute("CREATE TABLE stock_data_day (id SERIAL PRIMARY KEY, date TIMESTAMP, ticker_id INT, open NUMERIC, "
                        "high NUMERIC, low NUMERIC, close NUMERIC, adj_close NUMERIC, volume BIGINT)")
         conn.commit()
 
-    log_message("Stock data table created successfully")
+    log_message("Stock data day table created successfully")
+
+
+def create_stock_data_table_hour(conn):
+    if check_if_table_exists(conn, 'stock_data_hour'):
+        return True
+
+    with conn.cursor() as cursor:
+        cursor.execute("CREATE TABLE stock_data_hour (id SERIAL PRIMARY KEY, date TIMESTAMP, ticker_id INT, open NUMERIC, "
+                       "high NUMERIC, low NUMERIC, close NUMERIC, adj_close NUMERIC, volume BIGINT)")
+        conn.commit()
+
+    log_message("Stock data hour table created successfully")
 
 
 def check_if_table_exists(conn, table_name):

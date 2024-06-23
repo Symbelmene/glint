@@ -4,15 +4,15 @@ from connectors import PGConn
 from debug import log_message
 
 
-def download_ticker_data(pg_conn, tickers):
+def download_ticker_hour_data(pg_conn, tickers):
     # Download tickers data
-    log_message("Downloading data...")
+    log_message("Downloading hour data...")
     ticker_data = yf.download(tickers, interval='1h', period='2y')
 
     ticker_groups = ticker_data.T.groupby(level=1)
     # Create a database connection
     for ticker, group in ticker_groups:
-        log_message(f'Updating data for {ticker}')
+        log_message(f'Updating hour data for {ticker}')
         df_ticker = group.T
         df_ticker.columns = df_ticker.columns.droplevel(1)
         df_ticker = df_ticker[df_ticker.notna().all(axis=1)]
@@ -20,7 +20,26 @@ def download_ticker_data(pg_conn, tickers):
             continue
 
         # Check if data for the ticker already exists in the database
-        pg_conn.insert_stock_data(ticker, df_ticker)
+        pg_conn.insert_stock_hour_data(ticker, df_ticker)
+
+
+def download_ticker_day_data(pg_conn, tickers):
+    # Download tickers data
+    log_message("Downloading day data...")
+    ticker_data = yf.download(tickers, period='5y')
+
+    ticker_groups = ticker_data.T.groupby(level=1)
+    # Create a database connection
+    for ticker, group in ticker_groups:
+        log_message(f'Updating day data for {ticker}')
+        df_ticker = group.T
+        df_ticker.columns = df_ticker.columns.droplevel(1)
+        df_ticker = df_ticker[df_ticker.notna().all(axis=1)]
+        if df_ticker.empty:
+            continue
+
+        # Check if data for the ticker already exists in the database
+        pg_conn.insert_stock_day_data(ticker, df_ticker)
 
 
 def get_date_groups(pg_conn, max_groups=3):
@@ -54,12 +73,8 @@ def update_sector_tickers(sector_name):
     # Get list of tickers for the sector
     tickers = pg_conn.get_tickers_for_sector(sector_name)
 
-    # Check current state of database and get tickers to update
-    # TODO: Try to get missing_tickers and if unable then remove from ticker list
-    # TODO: Get missing ticker data by specifying start and end date
-    # TODO: Ensure duplicate date entries are not posted to database
-
-    download_ticker_data(pg_conn, tickers)
+    download_ticker_day_data(pg_conn, tickers)
+    download_ticker_hour_data(pg_conn, tickers)
 
 
 def main():
