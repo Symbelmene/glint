@@ -77,6 +77,16 @@ def update_sector_tickers(sector_name):
     download_ticker_hour_data(pg_conn, tickers)
 
 
+def update_all_sectors():
+    # Database connection parameters
+    pg_conn = PGConn()
+
+    sectors = pg_conn.get_sectors()
+
+    for sector in sectors:
+        update_sector_tickers(sector)
+
+
 def main():
     update_sector_tickers('Information Technology')
 

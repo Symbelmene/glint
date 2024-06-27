@@ -15,6 +15,7 @@ class PGConn:
         # Check if findata database exists and create it if it doesn't
         if not self.check_database_exists(cfg.STORER_DB_NAME):
             self.create_database(cfg.STORER_DB_NAME)
+
         self.conn.close()
 
         self.conn = pg.connect(dbname=cfg.STORER_DB_NAME,
@@ -34,8 +35,10 @@ class PGConn:
     def create_database(self, db_name):
         self.conn.rollback()
         self.conn.autocommit = True
+
         with self.conn.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE {db_name}")
+
         self.conn.autocommit = False
 
     def populate_initial_tables(self):
@@ -48,10 +51,16 @@ class PGConn:
             cursor.execute("SELECT id FROM tickers WHERE ticker = %s", (ticker,))
             return cursor.fetchone()[0]
 
+    def get_sectors(self):
+        with self.conn.cursor() as cursor:
+            cursor.execute("SELECT sector FROM sectors")
+            return [row[0] for row in cursor.fetchall()]
+
     def get_tickers_for_sector(self, sector_name):
         with self.conn.cursor() as cursor:
             cursor.execute("SELECT t.id, t.ticker FROM tickers t JOIN sectors s ON t.sector_id = s.id WHERE s.sector = %s",
                            (sector_name,))
+
             return [row[1] for row in cursor.fetchall()]
 
     def insert_stock_day_data(self, ticker, data):
@@ -98,6 +107,13 @@ class PGConn:
             return pd.DataFrame(data, columns=headers)
 
         return data
+
+    def find_tickers_with_no_data(self):
+        query = """SELECT t.ticker FROM tickers t LEFT JOIN stock_data_day sdd ON t.id = sdd.ticker_id WHERE sdd.id IS NULL"""
+
+        with self.conn.cursor() as cursor:
+            cursor.execute(query)
+            return cursor.fetchall()
 
 
 def populate_base_tables(conn):
