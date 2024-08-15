@@ -1,6 +1,7 @@
 h5py==3.9.0
-pandas==2.0.3
 tqdm==4.65.0
-yfinance==0.2.24
+yfinance==0.2.41
 psycopg2==2.9.9
 flask==3.0.0
+pandas==2.0.3
+numpy==1.26.4

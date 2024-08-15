@@ -1,4 +1,7 @@
+import time
+import traceback
 import pandas as pd
+import psycopg2
 import psycopg2 as pg
 
 from debug import log_message
@@ -7,10 +10,17 @@ cfg = Config()
 
 
 class PGConn:
-    def __init__(self):
-        self.conn = pg.connect(dbname='postgres',
-                               user=cfg.STORER_USER, password=cfg.STORER_PASSWORD,
-                               host=cfg.STORER_HOST, port=cfg.STORER_PORT)
+    def __init__(self, retry=True):
+        try:
+            self.conn = pg.connect(dbname='postgres',
+                          user=cfg.STORER_USER, password=cfg.STORER_PASSWORD,
+                          host=cfg.STORER_HOST, port=cfg.STORER_PORT)
+        except Exception as e:
+            if e == psycopg2.OperationalError and retry:
+                log_message("Database connection failed. The container may not yet be ready to accept connections."
+                            " Retrying in 30 seconds...")
+                time.sleep(30)
+                self.__init__(retry=False)
 
         # Check if findata database exists and create it if it doesn't
         if not self.check_database_exists(cfg.STORER_DB_NAME):
@@ -24,8 +34,6 @@ class PGConn:
 
         # Check if sector and ticker tables exist and create them if they don't
         self.populate_initial_tables()
-
-        # Create empty stock data table if it doesn't exist
 
     def check_database_exists(self, db_name):
         with self.conn.cursor() as cursor:
@@ -45,6 +53,11 @@ class PGConn:
         populate_base_tables(self.conn)
         create_stock_data_table_day(self.conn)
         create_stock_data_table_hour(self.conn)
+
+    def get_tickers(self):
+        with self.conn.cursor() as cursor:
+            cursor.execute("SELECT DISTINCT ticker FROM tickers")
+            return [row[0] for row in cursor.fetchall()]
 
     def get_ticker_id(self, ticker):
         with self.conn.cursor() as cursor:
@@ -114,6 +127,42 @@ class PGConn:
         with self.conn.cursor() as cursor:
             cursor.execute(query)
             return cursor.fetchall()
+
+    def get_ticker_data(self, ticker, as_dataframe=True):
+        query = """SELECT sdd.*, t.ticker FROM stock_data_day sdd INNER JOIN tickers t ON sdd.ticker_id = t.id WHERE ticker = %s"""
+        try:
+            cur = self.conn.cursor()
+            cur.execute(query, (ticker,))
+            ticker_data = cur.fetchall()
+        except Exception as e:
+            log_message(f'Error getting all feature details: {e}')
+            log_message(traceback.format_exc())
+            self.conn.rollback()
+            return False
+
+        if as_dataframe:
+            headers = [desc.name for desc in cur.description]
+            ticker_data = pd.DataFrame(ticker_data, columns=headers)
+
+        return ticker_data
+
+    def find_and_remove_duplicate_entries(self):
+        tickers = self.get_tickers()
+        for ticker in tickers:
+            remove_list = []
+            td = self.get_ticker_data(ticker)
+            for name, group in td.groupby('date'):
+                if len(group) > 1:
+                    remove_list += list(group['id'][1:])
+            if remove_list:
+                print(f'{ticker}: {len(remove_list)} duplicates')
+                self.delete_entry_by_row_ids(remove_list)
+
+    def delete_entry_by_row_ids(self, row_id_list):
+        with self.conn.cursor() as cursor:
+            cursor.execute("DELETE FROM stock_data_day WHERE id IN %s", (tuple(row_id_list),))
+            self.conn.commit()
+
 
 
 def populate_base_tables(conn):
