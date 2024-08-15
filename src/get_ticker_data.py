@@ -86,6 +86,8 @@ def update_all_sectors():
     for sector in sectors:
         update_sector_tickers(sector)
 
+    pg_conn.find_and_remove_duplicate_entries()
+
 
 def main():
     update_sector_tickers('Information Technology')
