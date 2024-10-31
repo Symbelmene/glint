@@ -3,7 +3,7 @@ import traceback
 import pandas as pd
 import psycopg2
 import psycopg2 as pg
-
+from tqdm import tqdm
 from debug import log_message
 from config import Config
 cfg = Config()
@@ -52,7 +52,7 @@ class PGConn:
     def populate_initial_tables(self):
         populate_base_tables(self.conn)
         create_stock_data_table_day(self.conn)
-        create_stock_data_table_hour(self.conn)
+        # create_stock_data_table_hour(self.conn)
 
     def get_tickers(self):
         with self.conn.cursor() as cursor:
@@ -128,7 +128,7 @@ class PGConn:
             cursor.execute(query)
             return cursor.fetchall()
 
-    def get_ticker_data(self, ticker, as_dataframe=True):
+    def get_ticker_data_day(self, ticker, as_dataframe=True):
         query = """SELECT sdd.*, t.ticker FROM stock_data_day sdd INNER JOIN tickers t ON sdd.ticker_id = t.id WHERE ticker = %s"""
         try:
             cur = self.conn.cursor()
@@ -144,13 +144,31 @@ class PGConn:
             headers = [desc.name for desc in cur.description]
             ticker_data = pd.DataFrame(ticker_data, columns=headers)
 
-        return ticker_data
+        return ticker_data.sort_values(by='date')
+
+    def get_ticker_data_hour(self, ticker, as_dataframe=True):
+        query = """SELECT sdd.*, t.ticker FROM stock_data_hour sdd INNER JOIN tickers t ON sdd.ticker_id = t.id WHERE ticker = %s"""
+        try:
+            cur = self.conn.cursor()
+            cur.execute(query, (ticker,))
+            ticker_data = cur.fetchall()
+        except Exception as e:
+            log_message(f'Error getting all feature details: {e}')
+            log_message(traceback.format_exc())
+            self.conn.rollback()
+            return False
+
+        if as_dataframe:
+            headers = [desc.name for desc in cur.description]
+            ticker_data = pd.DataFrame(ticker_data, columns=headers)
+
+        return ticker_data.sort_values(by='date')
 
     def find_and_remove_duplicate_entries(self):
         tickers = self.get_tickers()
         for ticker in tickers:
             remove_list = []
-            td = self.get_ticker_data(ticker)
+            td = self.get_ticker_data_day(ticker)
             for name, group in td.groupby('date'):
                 if len(group) > 1:
                     remove_list += list(group['id'][1:])
@@ -163,6 +181,34 @@ class PGConn:
             cursor.execute("DELETE FROM stock_data_day WHERE id IN %s", (tuple(row_id_list),))
             self.conn.commit()
 
+    def validate(self):
+        # Fetches each ticker from the tickers table and carries out the following checks:
+        # For each ticker:
+        #   For each of stock_data_day and stock_data_hour:
+        #       Check for a minimum number of entries
+        #       Check that the number of entries in the table is equal to the number of unique dates
+        #       Check for gaps in the data
+
+        tickers = self.get_tickers()
+        tickers.sort()
+        for ticker in tqdm(tickers):
+            day_data = self.get_ticker_data_day(ticker)
+            if len(day_data) < 300:
+                print(f'{ticker} Day Data has less than 300 entries')
+                continue
+            day_differences = day_data.sort_values(by='date')['date'].diff().dt.days
+            num_significant_diffs = len(day_differences[day_differences > 5])
+            if num_significant_diffs > 5:
+                print(f'{ticker} Day Data has {num_significant_diffs} gaps in the data > 5 days')
+
+            hour_data = self.get_ticker_data_hour(ticker)
+            if len(hour_data) < 300:
+                print(f'{ticker} Hour Data has less than 300 entries')
+                continue
+            hour_differences = hour_data.sort_values(by='date')['date'].diff().dt.days
+            num_significant_diffs = len(hour_differences[hour_differences > 5])
+            if num_significant_diffs > 5:
+                print(f'{ticker} Hour Data has {num_significant_diffs} gaps in the data > 1 day')
 
 
 def populate_base_tables(conn):
